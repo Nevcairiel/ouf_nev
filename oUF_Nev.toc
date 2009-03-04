@@ -1,0 +1,8 @@
+## Interface: 30000
+## Title: oUF_Nev
+## Author: Nevcairiel
+## Version: 1.0
+## Notes: Nevcairiel oUF layout.
+## Dependencies: oUF
+
+layout.lua

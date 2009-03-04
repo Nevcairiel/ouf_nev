@@ -241,39 +241,43 @@ end
 local function style(settings, self, unit)
 	self:RegisterForClicks("anyup")
 	self:SetAttribute("*type2", "menu")
-	
+
 	local micro = settings["nev-micro"]
 	local tiny = settings["nev-tiny"]
-	
+
 	-- Background
 	self:SetBackdrop(backdrop)
 	self:SetBackdropColor(0,0,0,0.5)
 	self:SetBackdropBorderColor(0.31, 0.28, 0.47, 1)
-	
+
 	local hpheight = micro and 18 or (tiny and 13 or 19)
 	local ppheight = tiny and 10 or 16
-	
-		-- Healthbar
+
+	-- Healthbar
 	local hp = CreateFrame("StatusBar", nil, self)
 	hp:SetHeight(hpheight)
 	hp:SetStatusBarTexture(statusbartexture)
 	hp:SetAlpha(0.8)
-	
+
 	hp:SetPoint("TOPLEFT", 5, -5)
 	hp:SetPoint("TOPRIGHT", -5, -5)
-	
+
 	-- Healthbar background
 	hp.bg = hp:CreateTexture(nil, "BORDER")
 	hp.bg:SetAllPoints(hp)
 	hp.bg:SetTexture(statusbartexture)
 	hp.bg:SetAlpha(0.25)
-	
+
 	-- healthbar coloring
 	hp.colorTapping = true
 	hp.colorDisconnected = true
 	hp.colorSmooth = true
 	hp.smoothGradient = smoothGradient
-	
+
+	if unit == player then
+		hp.frequentUpdates = true
+	end
+
 	if unit:find("target") then
 		hp.colorReaction = true
 		self.OverrideUpdateHealth = updateHealthBarWithReaction
@@ -282,22 +286,22 @@ local function style(settings, self, unit)
 	-- Healthbar text
 	hp.value = getFontString(hp)
 	hp.value:SetPoint("RIGHT", -2, 0)
-	
+
 	self.Health = hp
 	self.PostUpdateHealth = updateHealth
-	
+
 	local icon = hp:CreateTexture(nil, "OVERLAY")
 	icon:SetHeight(16)
 	icon:SetWidth(16)
 	icon:SetPoint("TOP", self, 0, not micro and 8 or 0)
 	icon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 	self.RaidIcon = icon
-	
+
 	self.Name = getFontString(hp)
 	self.Name:SetPoint("LEFT", 2, 0)
 	self:RegisterEvent("UNIT_NAME_UPDATE", updateName)
 	self:RegisterEvent("UNIT_LEVEL", updateName)
-	
+
 	-- micro is only the health bar and associated strings, anything that follows is not micro anymore
 	-- Only ToT/ToToT frames
 	local pp
@@ -320,6 +324,10 @@ local function style(settings, self, unit)
 		pp.bg:SetAllPoints(pp)
 		pp.bg:SetTexture(statusbartexture)
 		pp.bg:SetAlpha(0.25)
+
+		if unit == player then
+			pp.frequentUpdates = true
+		end
 
 		self.Power = pp
 		self.PostUpdatePower = updatePower

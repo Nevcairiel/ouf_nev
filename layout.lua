@@ -49,7 +49,7 @@ local classificationFormats = {
 }
 
 local function getDifficultyColor(level)
-	c = GetDifficultyColor((level > 0) and level or 99)
+	local c = GetDifficultyColor((level > 0) and level or 99)
 	return c.r, c.g, c.b
 end
 
@@ -299,7 +299,7 @@ local function style(settings, self, unit)
 	local icon = hp:CreateTexture(nil, "OVERLAY")
 	icon:SetHeight(16)
 	icon:SetWidth(16)
-	icon:SetPoint("TOP", self, 0, not micro and 8 or 0)
+	icon:SetPoint("TOP", self, 0, 5)
 	icon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 	self.RaidIcon = icon
 
@@ -351,11 +351,11 @@ local function style(settings, self, unit)
 		self.Race:SetPoint("LEFT", self.Class, "RIGHT",  1, 0)
 	end
 
-	if not unit or unit == "player" then --raid,  party or player gets a leader icon
+	if not unit or unit == "player" then --raid, party or player gets a leader icon
 		local leader = hp:CreateTexture(nil, "OVERLAY")
-		leader:SetHeight(16)
-		leader:SetWidth(16)
-		leader:SetPoint("TOPLEFT", self, -8, 8)
+		leader:SetHeight(12)
+		leader:SetWidth(12)
+		leader:SetPoint("TOPLEFT", self, -1, 3)
 		leader:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
 		self.Leader = leader
 	end
@@ -411,7 +411,7 @@ local function style(settings, self, unit)
 
 		self.CPoints = {}
 		for i=1,MAX_COMBO_POINTS do
-			local c = pp:CreateTexture(nil, "OVERLAY")
+			local c = castbar:CreateTexture(nil, "OVERLAY")
 			c:SetTexture("Interface\\AddOns\\oUF_Nev\\media\\combo")
 			c:SetHeight(10)
 			c:SetWidth(10)
@@ -422,6 +422,13 @@ local function style(settings, self, unit)
 			end
 			tinsert(self.CPoints, c)
 		end
+		-- a metatable hack to always query UnitHasVehicleUI on CP updates
+		setmetatable(self.CPoints, {__index = function(t, k)
+			if k == "unit" then
+				return UnitHasVehicleUI("player") and "vehicle" or "player"
+			end
+			return nil
+		end})
 	end
 
 	return self
@@ -464,5 +471,5 @@ local target = oUF:Spawn("target", "oUF_Target")
 target:SetPoint("LEFT", UIParent, "CENTER", 20, -250)
 
 oUF:SetActiveStyle("Nev_Micro")
-local targettarget = oUF:Spawn("targettarget", "oUF_Target")
+local targettarget = oUF:Spawn("targettarget", "oUF_TargetTarget")
 targettarget:SetPoint("LEFT", UIParent, "CENTER", 20, -200)

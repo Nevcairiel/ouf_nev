@@ -82,7 +82,7 @@ local formats = setmetatable({}, {
 		return self[key]
 	end,
 	__newindex = function(self, key, value)
-		rawset(self, key, setmetatable(value or {}, fmtmeta))
+		rawset(self, key, setmetatable(value, fmtmeta))
 	end,
 })
 
@@ -153,33 +153,6 @@ oUF.colors.power.HAPPINESS = { 0, 1, 1}
 oUF.colors.power.RUNES = {0.5, 0.5, 0.5 }
 oUF.colors.power.RUNIC_POWER = {0.6, 0.45, 0.35}
 
-local function updateHealth(self, event, unit, bar, min, max)
-	if UnitIsDead(unit) then 
-		bar:SetValue(0)
-		bar.value:SetText("Dead")
-	elseif UnitIsGhost(unit) then
-		bar:SetValue(0)
-		bar.value:SetText("Ghost")
-	elseif not UnitIsConnected(unit) then
-		bar:SetValue(0)
-		bar.value:SetText("Offline")
-	else
-		formats[unit].health(bar.value, min, max)
-	end
-	self:UNIT_NAME_UPDATE(event, unit)
-end
-
-local function updatePower(self, event, unit, bar, min, max)
-	if max == 0 or UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then
-		bar:SetValue(0)
-		if bar.value then
-			bar.value:SetText()
-		end
-	elseif bar.value then
-		formats[unit].power(bar.value, min, max)
-	end
-end
-
 local function updateLevel(self, event, unit)
 	if self.unit ~= unit then return end
 	
@@ -217,6 +190,33 @@ local function updateName(self, event, unit)
 	
 	if self.Race then
 		self.Race:SetText(UnitRace(unit))
+	end
+end
+
+local function updateHealth(self, event, unit, bar, min, max)
+	if UnitIsDead(unit) then
+		bar:SetValue(0)
+		bar.value:SetText("Dead")
+	elseif UnitIsGhost(unit) then
+		bar:SetValue(0)
+		bar.value:SetText("Ghost")
+	elseif not UnitIsConnected(unit) then
+		bar:SetValue(0)
+		bar.value:SetText("Offline")
+	else
+		formats[unit].health(bar.value, min, max)
+	end
+	--self:UNIT_NAME_UPDATE(event, unit)
+end
+
+local function updatePower(self, event, unit, bar, min, max)
+	if max == 0 or UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then
+		bar:SetValue(0)
+		if bar.value then
+			bar.value:SetText()
+		end
+	elseif bar.value then
+		formats[unit].power(bar.value, min, max)
 	end
 end
 

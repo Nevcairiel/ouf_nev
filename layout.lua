@@ -1,9 +1,15 @@
 -- upvalues, for great justice
-local UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByPlayer, UnitPlayerControlled, UnitCanAttack, UnitLevel = UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByPlayer, UnitPlayerControlled, UnitCanAttack, UnitLevel
-local GetQuestGreenRange = GetQuestGreenRange
-local RAID_CLASS_COLORS = RAID_CLASS_COLORS
+local oUF = oUF
+local UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByPlayer, UnitClass,
+      UnitPlayerControlled, UnitCanAttack, UnitLevel, UnitHasVehicleUI, UnitClassification, UnitName, UnitIsPlayer,
+      UnitCreatureFamily, UnitCreatureType, UnitIsDead, UnitIsGhost, UnitRace =
+      UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByPlayer, UnitClass,
+      UnitPlayerControlled, UnitCanAttack, UnitLevel, UnitHasVehicleUI, UnitClassification, UnitName, UnitIsPlayer,
+      UnitCreatureFamily, UnitCreatureType, UnitIsDead, UnitIsGhost, UnitRace
+local GetQuestGreenRange, GetDifficultyColor = GetQuestGreenRange, GetDifficultyColor
+local RAID_CLASS_COLORS, MAX_COMBO_POINTS = RAID_CLASS_COLORS, MAX_COMBO_POINTS
 
-local format = string.format
+local format, floor, unpack, type, select, tinsert = string.format, math.floor, unpack, type, select, tinsert
 
 local backdrop = {
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground", tile = true, tileSize = 16,
@@ -274,7 +280,7 @@ local function style(settings, self, unit)
 	hp.colorSmooth = true
 	hp.smoothGradient = smoothGradient
 
-	if unit == player then
+	if unit == "player" then
 		hp.frequentUpdates = true
 	end
 
@@ -325,7 +331,7 @@ local function style(settings, self, unit)
 		pp.bg:SetTexture(statusbartexture)
 		pp.bg:SetAlpha(0.25)
 
-		if unit == player then
+		if unit == "player" then
 			pp.frequentUpdates = true
 		end
 

@@ -49,6 +49,7 @@ end
 
 local barFormatMinMax = "%s/%s"
 local barFormatPercMinMax = "%d%% %s/%s"
+local barFormatPerc = "%d%%"
 
 local function fmt_standard(txt, min, max)
 	min, max = formatLargeValue(min), formatLargeValue(max)
@@ -59,6 +60,11 @@ local function fmt_percminmax(txt, min, max)
 	local perc = floor(min/max*100)
 	min, max = formatLargeValue(min), formatLargeValue(max)
 	txt:SetFormattedText(barFormatPercMinMax, perc, min, max)
+end
+
+local function fmt_perc(txt, min, max)
+	local perc = floor(min/max*100)
+	txt:SetFormattedText(barFormatPerc, perc)
 end
 
 local fmtmeta = { __index = function(self, key)
@@ -87,6 +93,8 @@ local formats = setmetatable({}, {
 })
 
 formats.target.health = fmt_percminmax
+formats.targettarget.health = fmt_perc
+formats.targettargettarget.health = fmt_perc
 
 local function OnEnter(self)
 	UnitFrame_OnEnter(self)
@@ -206,7 +214,7 @@ local function updateHealth(self, event, unit, bar, min, max)
 	else
 		formats[unit].health(bar.value, min, max)
 	end
-	--self:UNIT_NAME_UPDATE(event, unit)
+	self:UNIT_NAME_UPDATE(event, unit)
 end
 
 local function updatePower(self, event, unit, bar, min, max)
@@ -220,9 +228,9 @@ local function updatePower(self, event, unit, bar, min, max)
 	end
 end
 
-local function getFontString(parent, justify)
+local function getFontString(parent, justify, size)
 	local fs = parent:CreateFontString(nil, "OVERLAY")
-	fs:SetFont(font, 11)
+	fs:SetFont(font, size or 11)
 	fs:SetShadowColor(0,0,0)
 	fs:SetShadowOffset(0.8, -0.8)
 	fs:SetTextColor(1,1,1)
@@ -290,43 +298,117 @@ local function style(settings, self, unit)
 	self:RegisterEvent("UNIT_NAME_UPDATE", updateName)
 	self:RegisterEvent("UNIT_LEVEL", updateName)
 	
-	-- micro is only the health bar and associated strings, anything that follows is not tiny anymore
+	-- micro is only the health bar and associated strings, anything that follows is not micro anymore
 	-- Only ToT/ToToT frames
-	if micro then return self end
-	
-	-- Power Bar 
-	local pp = CreateFrame("StatusBar", nil, self)
-	pp:SetHeight(ppheight)
-	pp:SetStatusBarTexture(statusbartexture)
-	pp:SetAlpha(0.8)
-	
-	pp:SetPoint("LEFT", 5, 0)
-	pp:SetPoint("RIGHT", -5, 0)
-	pp:SetPoint("TOP", hp, "BOTTOM", 0, -1)
-	
-	pp.colorPower = true
-	pp.colorDisconnected = true
-	pp.colorTapping = true
-	
-	pp.bg = pp:CreateTexture(nil, "BORDER")
-	pp.bg:SetAllPoints(pp)
-	pp.bg:SetTexture(statusbartexture)
-	pp.bg:SetAlpha(0.25)
-	
-	self.Power = pp
-	self.PostUpdatePower = updatePower
-	
-	pp.value = getFontString(pp)
-	pp.value:SetPoint("RIGHT", -2, 0)
-	
-	self.Lvl = getFontString(pp)
-	self.Lvl:SetPoint("LEFT", pp, "LEFT", 2, 0)
+	local pp
+	if not micro then
+		-- Power Bar
+		pp = CreateFrame("StatusBar", nil, self)
+		pp:SetHeight(ppheight)
+		pp:SetStatusBarTexture(statusbartexture)
+		pp:SetAlpha(0.8)
 
-	self.Class = getFontString(pp)
-	self.Class:SetPoint("LEFT", self.Lvl, "RIGHT",  1, 0)
+		pp:SetPoint("LEFT", 5, 0)
+		pp:SetPoint("RIGHT", -5, 0)
+		pp:SetPoint("TOP", hp, "BOTTOM", 0, -1)
 
-	self.Race = getFontString(pp)
-	self.Race:SetPoint("LEFT", self.Class, "RIGHT",  1, 0)
+		pp.colorPower = true
+		pp.colorDisconnected = true
+		pp.colorTapping = true
+
+		pp.bg = pp:CreateTexture(nil, "BORDER")
+		pp.bg:SetAllPoints(pp)
+		pp.bg:SetTexture(statusbartexture)
+		pp.bg:SetAlpha(0.25)
+
+		self.Power = pp
+		self.PostUpdatePower = updatePower
+
+		pp.value = getFontString(pp)
+		pp.value:SetPoint("RIGHT", -2, 0)
+
+		self.Lvl = getFontString(pp)
+		self.Lvl:SetPoint("LEFT", pp, "LEFT", 2, 0)
+
+		self.Class = getFontString(pp)
+		self.Class:SetPoint("LEFT", self.Lvl, "RIGHT",  1, 0)
+
+		self.Race = getFontString(pp)
+		self.Race:SetPoint("LEFT", self.Class, "RIGHT",  1, 0)
+	end
+
+	if not unit or unit == "player" then --raid,  party or player gets a leader icon
+		local leader = hp:CreateTexture(nil, "OVERLAY")
+		leader:SetHeight(16)
+		leader:SetWidth(16)
+		leader:SetPoint("TOPLEFT", self, -8, 8)
+		leader:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
+		self.Leader = leader
+	end
+
+	if unit == "player" then -- player gets resting and combat
+		local resting = pp:CreateTexture(nil, "OVERLAY")
+		resting:SetHeight(14)
+		resting:SetWidth(14)
+		resting:SetPoint("BOTTOMLEFT", -8, -8)
+		resting:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
+		resting:SetTexCoord(0.09, 0.43, 0.08, 0.42)
+		self.Resting = resting
+
+		local combat = pp:CreateTexture(nil, "OVERLAY")
+		combat:SetHeight(12)
+		combat:SetWidth(12)
+		combat:SetPoint("BOTTOMLEFT", -6, -6)
+		combat:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
+		combat:SetTexCoord(0.57, 0.90, 0.08, 0.41)
+		self.Combat = combat
+	end
+
+	-- Target has CPoints and a castbar
+	if unit == "target" then
+		local castbar = CreateFrame("StatusBar", nil, self)
+		castbar:SetPoint("LEFT", 5, 0)
+		castbar:SetPoint("RIGHT", -5, 0)
+		castbar:SetPoint("TOP", pp, "BOTTOM", 0, -1)
+		castbar:SetStatusBarTexture(statusbartexture)
+		castbar:SetStatusBarColor(1, 0.7, 0)
+		--castbar:SetBackdrop(backdrop)
+		--castbar:SetBackdropColor(0, 0, 0)
+		castbar:SetHeight(12)
+		castbar:SetAlpha(0.8)
+
+		castbar.Text = getFontString(castbar, nil, 10)
+		castbar.Text:SetPoint("LEFT", castbar, 2, 0)
+
+		castbar.Time = getFontString(castbar, nil, 10)
+		castbar.Time:SetJustifyH("RIGHT")
+		castbar.Time:SetPoint("RIGHT", castbar, -2, 0)
+
+		castbar.bg = castbar:CreateTexture(nil, 'BORDER')
+		castbar.bg:SetAllPoints(castbar)
+		castbar.bg:SetTexture(statusbartexture)
+		castbar.bg:SetVertexColor(0.25, 0.25, 0.25, 0.35)
+		castbar.bg:SetAlpha(.2)
+
+		castbar.Spark = castbar:CreateTexture(nil, "OVERLAY")
+		castbar.Spark:SetWidth( 4 )
+		castbar.Spark:SetBlendMode("ADD")
+		self.Castbar = castbar
+
+		self.CPoints = {}
+		for i=1,MAX_COMBO_POINTS do
+			local c = pp:CreateTexture(nil, "OVERLAY")
+			c:SetTexture("Interface\\AddOns\\oUF_Nev\\media\\combo")
+			c:SetHeight(10)
+			c:SetWidth(10)
+			if i > 1 then
+				c:SetPoint("BOTTOMRIGHT",self.CPoints[i-1],"BOTTOMLEFT")
+			else
+				c:SetPoint("BOTTOMRIGHT",self,"BOTTOMRIGHT",-4,1)
+			end
+			tinsert(self.CPoints, c)
+		end
+	end
 
 	return self
 end
@@ -339,7 +421,7 @@ oUF:RegisterStyle("Nev", setmetatable({
 
 oUF:RegisterStyle("NevCastBar", setmetatable({
 	["initial-width"] = 170,
-	["initial-height"] = 46, -- increase
+	["initial-height"] = 59,
 	["initial-scale"] = 1.3,
 	["castbar"] = true,
 }, {__call = style}))
@@ -366,3 +448,7 @@ player:SetPoint("RIGHT", UIParent, "CENTER", -20, -250)
 oUF:SetActiveStyle("NevCastBar")
 local target = oUF:Spawn("target", "oUF_Target")
 target:SetPoint("LEFT", UIParent, "CENTER", 20, -250)
+
+oUF:SetActiveStyle("Nev_Micro")
+local targettarget = oUF:Spawn("targettarget", "oUF_Target")
+targettarget:SetPoint("LEFT", UIParent, "CENTER", 20, -200)

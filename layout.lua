@@ -9,7 +9,9 @@ local UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByP
 local GetQuestGreenRange, GetDifficultyColor = GetQuestGreenRange, GetDifficultyColor
 local RAID_CLASS_COLORS, MAX_COMBO_POINTS = RAID_CLASS_COLORS, MAX_COMBO_POINTS
 
-local format, floor, ceil, max, min, unpack, type, select, tinsert = string.format, math.floor, math.ceil, math.max, math.min, unpack, type, select, tinsert
+local format, strfind, gsub, strsub, strupper = string.format, string.find, string.gsub, string.sub, string.upper
+local floor, ceil, max, min = math.floor, math.ceil, math.max, math.min
+local unpack, type, select, tinsert =  unpack, type, select, table.insert
 
 local backdrop = {
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground", tile = true, tileSize = 16,
@@ -26,6 +28,18 @@ local white = { r = 1, g = 1, b = 1}
 local smoothGradient = {0.9,  0.2, 0.3, 
                           1, 0.85, 0.1, 
                         0.4, 0.95, 0.3}
+
+-- This is the core of RightClick menus on diffrent frames
+local function menu(self)
+	local unit = strsub(self.unit, 1, -2)
+	local cunit = gsub(self.unit, "(.)", strupper, 1)
+
+	if(unit == "party" or unit == "partypet") then
+		ToggleDropDownMenu(1, nil, _G["PartyMemberFrame"..self.id.."DropDown"], "cursor", 0, 0)
+	elseif(_G[cunit.."FrameDropDown"]) then
+		ToggleDropDownMenu(1, nil, _G[cunit.."FrameDropDown"], "cursor", 0, 0)
+	end
+end
 
 local function formatLargeValue(value)
 	if value < 9999 then
@@ -80,12 +94,12 @@ end}
 local formats = setmetatable({}, { 
 	__index = function(self, key)
 		if type(key) == "nil" then return nil end
-		if key:find("raidpet%d") then self[key] = self.raidpet
-		elseif key:find("raidtarget%d") then self[key] = self.raidtarget
-		elseif key:find("raid%d") then self[key] = self.raid
-		elseif key:find("partypet%d") then self[key] = self.partypet
-		elseif key:find("party%dtarget") then self[key] = self.partytarget
-		elseif key:find("party%d") then self[key] = self.party
+		if strfind(key, "raidpet%d") then self[key] = self.raidpet
+		elseif strfind(key, "raidtarget%d") then self[key] = self.raidtarget
+		elseif strfind(key, "raid%d") then self[key] = self.raid
+		elseif strfind(key, "partypet%d") then self[key] = self.partypet
+		elseif strfind(key, "party%dtarget") then self[key] = self.partytarget
+		elseif strfind(key, "party%d") then self[key] = self.party
 		else
 			self[key] = {}
 		end
@@ -99,14 +113,6 @@ local formats = setmetatable({}, {
 formats.target.health = fmt_percminmax
 formats.targettarget.health = fmt_perc
 formats.targettargettarget.health = fmt_perc
-
-local function OnEnter(self)
-	UnitFrame_OnEnter(self)
-end
-
-local function OnLeave(self)
-	UnitFrame_OnLeave()
-end
 
 local updateHealthBarWithReaction
 do
@@ -203,6 +209,28 @@ local function updateName(self, event, unit)
 	if self.Race then
 		self.Race:SetText(UnitRace(unit))
 	end
+end
+
+local function updateHighlight(self, entered)
+	if (UnitExists("target") and UnitIsUnit("target", self.unit) and (not strfind(self.unit, "target", 1, true))) or entered then
+		self.MouseOverHighlight:Show()
+	else
+		self.MouseOverHighlight:Hide()
+	end
+end
+
+local function updateMouseOverHighlight(self, event, unit)
+	updateHighlight(self)
+end
+
+local function OnEnter(self)
+	updateHighlight(self, true)
+	UnitFrame_OnEnter(self)
+end
+
+local function OnLeave(self)
+	updateHighlight(self)
+	UnitFrame_OnLeave()
 end
 
 local function updateHealth(self, event, unit, bar, min, max)
@@ -323,6 +351,8 @@ local function postCreateAuraIcon(self, button, icons, index, debuff)
 end
 
 local function style(settings, self, unit)
+	self.menu = menu
+	self.unit = unit
 	self:RegisterForClicks("anyup")
 	self:SetAttribute("*type2", "menu")
 	self:SetScript("OnEnter", OnEnter)
@@ -364,7 +394,7 @@ local function style(settings, self, unit)
 		hp.frequentUpdates = true
 	end
 
-	if unit:find("target") then
+	if strfind(unit, "target", 1, true) then
 		hp.colorReaction = true
 		self.OverrideUpdateHealth = updateHealthBarWithReaction
 	end
@@ -397,6 +427,16 @@ local function style(settings, self, unit)
 	self.DebuffHighlight = dbh
 	self.DebuffHighlightFilter = true
 	self.DebuffHighlightAlpha = 0.5
+
+	local moh = hp:CreateTexture(nil, "OVERLAY")
+	moh:SetTexture("Interface\\AddOns\\oUF_Nev\\media\\mouseoverHighlight")
+	moh:SetAlpha(0.5)
+	moh:SetBlendMode("ADD")
+	moh:SetPoint("TOPLEFT", self, "TOPLEFT", 0, -5)
+	moh:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 5)
+	moh:Hide()
+	self.MouseOverHighlight = moh
+	self:RegisterEvent("PLAYER_TARGET_CHANGED", updateMouseOverHighlight)
 
 	-- micro is only the health bar and associated strings, anything that follows is not micro anymore
 	-- Only ToT/ToToT frames
@@ -553,7 +593,6 @@ local function style(settings, self, unit)
 		self.PostCreateAuraIcon = postCreateAuraIcon
 		self.SetAuraPosition = SetAuraPosition
 	end
-	self.unit = unit
 
 	return self
 end

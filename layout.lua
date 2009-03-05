@@ -9,7 +9,7 @@ local UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByP
 local GetQuestGreenRange, GetDifficultyColor = GetQuestGreenRange, GetDifficultyColor
 local RAID_CLASS_COLORS, MAX_COMBO_POINTS = RAID_CLASS_COLORS, MAX_COMBO_POINTS
 
-local format, floor, unpack, type, select, tinsert = string.format, math.floor, unpack, type, select, tinsert
+local format, floor, ceil, max, min, unpack, type, select, tinsert = string.format, math.floor, math.ceil, math.max, math.min, unpack, type, select, tinsert
 
 local backdrop = {
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground", tile = true, tileSize = 16,
@@ -17,7 +17,6 @@ local backdrop = {
 		insets = {left = 4, right = 4, top = 4, bottom = 4},
 	}
 local statusbartexture = "Interface\\AddOns\\oUF_Nev\\media\\bantobar"
--- local bordertexture = "Interface\\AddOns\\oUF_Ammo\\media\\border"
 local font = "Interface\\AddOns\\oUF_Nev\\media\\myriad.ttf"
 
 local red = {0.9, 0.2, 0.3}
@@ -37,7 +36,6 @@ local function formatLargeValue(value)
 		return format("%.2fm", value / 1000000)
 	end
 end
-
 
 local classificationFormats = {
 	worldboss = "?? Boss",
@@ -184,13 +182,13 @@ end
 
 local function updateName(self, event, unit)
 	if self.unit ~= unit then return end
-	
+
 	self.Name:SetText(UnitName(unit))
-	
+
 	if self.Lvl then
 		updateLevel(self, event, unit)
 	end
-	
+
 	if self.Class then
 		local color = white
 		if UnitIsPlayer(unit) then
@@ -201,7 +199,7 @@ local function updateName(self, event, unit)
 		end
 		self.Class:SetVertexColor(color.r, color.g, color.b)
 	end
-	
+
 	if self.Race then
 		self.Race:SetText(UnitRace(unit))
 	end
@@ -249,33 +247,58 @@ local function SetAuraPosition(self, icons, x)
 		local col = 0
 		local row = 0
 		local spacing = 2
-		local gap = icons.gap
 		local size = 16 + spacing
 		local anchor = icons.initialAnchor or "BOTTOMLEFT"
 		local growthx = (icons["growth-x"] == "LEFT" and -1) or 1
 		local growthy = (icons["growth-y"] == "DOWN" and -1) or 1
 		local cols = icons.cols or 10
 		local rows = icons.rows or 2
+		local maxicons = cols*rows
+		local isFriend = true
+		if self.unit == "target" or self.unit == "focus" then
+			isFriend = UnitIsFriend(self.unit, "player")
+		end
 
-		for i = 1, x do
+		local showBuffs, showDebuffs = 0, 0
+		if isFriend then
+			showDebuffs = min(icons.visibleDebuffs, maxicons)
+			showBuffs = min(icons.visibleBuffs, maxicons - (showDebuffs > 0 and showDebuffs + 1 or 0))
+		else
+			showBuffs = min(icons.visibleBuffs, maxicons)
+			showDebuffs = min(icons.visibleDebuffs, maxicons - (showBuffs > 0 and showBuffs + 1 or 0))
+		end
+		local requiredIcons = showBuffs + showDebuffs + ((showBuffs > 0 and showDebuffs > 0) and 1 or 0)
+		assert(requiredIcons <= maxicons)
+
+		rows = ceil(requiredIcons / cols)
+
+		-- show buffs
+		col, row = 0, 0
+		for i = 1, showBuffs do
 			local button = icons[i]
 			if(button and button:IsShown()) then
-				if(gap and button.debuff) then
-					if(col > 0) then
-						col = col + 1
-					end
-
-					gap = false
-				end
-
 				if(col >= cols) then
 					col = 0
 					row = row + 1
 				end
 				button:ClearAllPoints()
 				button:SetPoint(anchor, icons, anchor, col * size * growthx, row * size * growthy)
-
 				col = col + 1
+			end
+		end
+
+		local offset = icons.visibleBuffs
+		row, col = rows - 1, cols - 1
+		for i = offset + 1, (offset + showDebuffs) do
+			local button = icons[i]
+			if(button and button:IsShown()) then
+				if(col < 0) then
+					col = cols - 1
+					row = row - 1
+				end
+				button:ClearAllPoints()
+				button:SetPoint(anchor, icons, anchor, col * size * growthx, row * size * growthy)
+				col = col - 1
 			end
 		end
 	end
@@ -287,7 +310,7 @@ local function postCreateAuraIcon(self, button, icons, index, debuff)
 	local width = icons.width or icons:GetWidth() or self:GetWidth()
 	local scale = width / (16 * cols + (cols - 1) * 2)
 	button:SetScale(scale)
-	
+
 	-- change default font, its teh big
 	local Count = button.count
 	Count:SetFont(font, 11, "OUTLINE")
@@ -485,8 +508,8 @@ local function style(settings, self, unit)
 			return nil
 		end})
 	end
-	
-	if unit == "target" or not unit then
+
+	if unit == "target" or unit == "pet" or not unit then
 		local auras = CreateFrame("Frame", nil, self)
 		auras:SetHeight(16)
 		auras:SetPoint("TOPRIGHT", self, "BOTTOMRIGHT", -4, 2)
@@ -495,14 +518,30 @@ local function style(settings, self, unit)
 		auras.initialAnchor = "TOPLEFT"
 		auras["growth-x"] = "RIGHT"
 		auras["growth-y"] = "DOWN"
-		auras.rows = 4
-		auras.cols = 11
 		auras.spacing = 2
 		auras.disableCooldown = true
+		auras.showDebuffType = true
+
+		if unit == "target" then
+			auras.rows = 4
+			auras.cols = 11
+		elseif unit == "pet" then
+			auras.rows = 1
+			auras.cols = 11
+			auras.buffFilter = "RAID|HELPFUL"
+			auras.debuffFilter = "RAID|HARMFUL"
+		elseif not unit then -- party frames
+			auras.rows = 2
+			auras.cols = 11
+			auras.buffFilter = "RAID|HELPFUL"
+			auras.debuffFilter = "RAID|HARMFUL"
+		end
+
 		self.Auras = auras
 		self.PostCreateAuraIcon = postCreateAuraIcon
 		self.SetAuraPosition = SetAuraPosition
 	end
+	self.unit = unit
 
 	return self
 end

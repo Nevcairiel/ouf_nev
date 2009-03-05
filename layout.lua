@@ -627,12 +627,19 @@ oUF:RegisterStyle("Nev_Micro", setmetatable({
 
 oUF:SetActiveStyle("Nev")
 local player = oUF:Spawn("player", "oUF_Player")
-player:SetPoint("RIGHT", UIParent, "CENTER", -20, -50)
+player:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 10, -26)
 
 oUF:SetActiveStyle("NevCastBar")
 local target = oUF:Spawn("target", "oUF_Target")
-target:SetPoint("LEFT", UIParent, "CENTER", 20, -50)
+target:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 185, -26)
 
 oUF:SetActiveStyle("Nev_Micro")
 local targettarget = oUF:Spawn("targettarget", "oUF_TargetTarget")
-targettarget:SetPoint("LEFT", UIParent, "CENTER", 20, 0)
+targettarget:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 460, -35)
+
+local targettargettarget = oUF:Spawn("targettarget", "oUF_TargetTargetTarget")
+targettargettarget:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 460, -63)
+
+oUF:SetActiveStyle("Nev_Tiny")
+local pet = oUF:Spawn("pet", "oUF_Pet")
+pet:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -90)

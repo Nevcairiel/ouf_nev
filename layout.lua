@@ -244,6 +244,61 @@ local function getFontString(parent, justify, size)
 	return fs
 end
 
+local function SetAuraPosition(self, icons, x)
+	if(icons and x > 0) then
+		local col = 0
+		local row = 0
+		local spacing = 2
+		local gap = icons.gap
+		local size = 16 + spacing
+		local anchor = icons.initialAnchor or "BOTTOMLEFT"
+		local growthx = (icons["growth-x"] == "LEFT" and -1) or 1
+		local growthy = (icons["growth-y"] == "DOWN" and -1) or 1
+		local cols = icons.cols or 10
+		local rows = icons.rows or 2
+
+		for i = 1, x do
+			local button = icons[i]
+			if(button and button:IsShown()) then
+				if(gap and button.debuff) then
+					if(col > 0) then
+						col = col + 1
+					end
+
+					gap = false
+				end
+
+				if(col >= cols) then
+					col = 0
+					row = row + 1
+				end
+				button:ClearAllPoints()
+				button:SetPoint(anchor, icons, anchor, col * size * growthx, row * size * growthy)
+
+				col = col + 1
+			end
+		end
+	end
+end
+
+local function postCreateAuraIcon(self, button, icons, index, debuff)
+	local cols = icons.cols or 10
+	local rows = icons.rows or 2
+	local width = icons.width or icons:GetWidth() or self:GetWidth()
+	local scale = width / (16 * cols + (cols - 1) * 2)
+	button:SetScale(scale)
+	
+	-- change default font, its teh big
+	local Count = button.count
+	Count:SetFont(font, 11, "OUTLINE")
+	Count:SetShadowColor(0, 0, 0, 1)
+	Count:SetShadowOffset(0.8, -0.8)
+	Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 1, 0)
+	Count:SetWidth(18)
+	Count:SetHeight(10)
+	Count:SetJustifyH("RIGHT")
+end
+
 local function style(settings, self, unit)
 	self:RegisterForClicks("anyup")
 	self:SetAttribute("*type2", "menu")
@@ -430,6 +485,24 @@ local function style(settings, self, unit)
 			return nil
 		end})
 	end
+	
+	if unit == "target" or not unit then
+		local auras = CreateFrame("Frame", nil, self)
+		auras:SetHeight(16)
+		auras:SetPoint("TOPRIGHT", self, "BOTTOMRIGHT", -4, 2)
+		auras:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 4, 2)
+		auras.width = settings["initial-width"] - 8
+		auras.initialAnchor = "TOPLEFT"
+		auras["growth-x"] = "RIGHT"
+		auras["growth-y"] = "DOWN"
+		auras.rows = 4
+		auras.cols = 11
+		auras.spacing = 2
+		auras.disableCooldown = true
+		self.Auras = auras
+		self.PostCreateAuraIcon = postCreateAuraIcon
+		self.SetAuraPosition = SetAuraPosition
+	end
 
 	return self
 end
@@ -464,12 +537,12 @@ oUF:RegisterStyle("Nev_Micro", setmetatable({
 
 oUF:SetActiveStyle("Nev")
 local player = oUF:Spawn("player", "oUF_Player")
-player:SetPoint("RIGHT", UIParent, "CENTER", -20, -250)
+player:SetPoint("RIGHT", UIParent, "CENTER", -20, -50)
 
 oUF:SetActiveStyle("NevCastBar")
 local target = oUF:Spawn("target", "oUF_Target")
-target:SetPoint("LEFT", UIParent, "CENTER", 20, -250)
+target:SetPoint("LEFT", UIParent, "CENTER", 20, -50)
 
 oUF:SetActiveStyle("Nev_Micro")
 local targettarget = oUF:Spawn("targettarget", "oUF_TargetTarget")
-targettarget:SetPoint("LEFT", UIParent, "CENTER", 20, -200)
+targettarget:SetPoint("LEFT", UIParent, "CENTER", 20, 0)

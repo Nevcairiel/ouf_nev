@@ -386,6 +386,16 @@ local function style(settings, self, unit)
 	self:RegisterEvent("UNIT_NAME_UPDATE", updateName)
 	self:RegisterEvent("UNIT_LEVEL", updateName)
 
+	local dbh = hp:CreateTexture(nil, "OVERLAY")
+	dbh:SetTexture("Interface\\AddOns\\oUF_Nev\\media\\debuffHighlight")
+	dbh:SetBlendMode("ADD")
+	dbh:SetVertexColor(0,0,0,0) -- set alpha to 0 to hide the texture
+	dbh:SetPoint("TOPLEFT", self, "TOPLEFT", 0, -5)
+	dbh:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 5)
+	self.DebuffHighlight = dbh
+	self.DebuffHighlightFilter = true
+	self.DebuffHighlightAlpha = 0.5
+
 	-- micro is only the health bar and associated strings, anything that follows is not micro anymore
 	-- Only ToT/ToToT frames
 	local pp

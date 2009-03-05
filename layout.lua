@@ -6,7 +6,7 @@ local UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByP
       UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByPlayer, UnitClass,
       UnitPlayerControlled, UnitCanAttack, UnitLevel, UnitHasVehicleUI, UnitClassification, UnitName, UnitIsPlayer,
       UnitCreatureFamily, UnitCreatureType, UnitIsDead, UnitIsGhost, UnitRace
-local GetQuestGreenRange, GetDifficultyColor = GetQuestGreenRange, GetDifficultyColor
+local GetDifficultyColor = GetDifficultyColor
 local RAID_CLASS_COLORS, MAX_COMBO_POINTS = RAID_CLASS_COLORS, MAX_COMBO_POINTS
 
 local format, strfind, gsub, strsub, strupper = string.format, string.find, string.gsub, string.sub, string.upper
@@ -394,7 +394,7 @@ local function style(settings, self, unit)
 		hp.frequentUpdates = true
 	end
 
-	if strfind(unit, "target", 1, true) then
+	if unit and strfind(unit, "target", 1, true) then
 		hp.colorReaction = true
 		self.OverrideUpdateHealth = updateHealthBarWithReaction
 	end
@@ -537,7 +537,7 @@ local function style(settings, self, unit)
 		castbar.bg:SetAlpha(.2)
 
 		castbar.Spark = castbar:CreateTexture(nil, "OVERLAY")
-		castbar.Spark:SetWidth( 4 )
+		castbar.Spark:SetWidth(4)
 		castbar.Spark:SetBlendMode("ADD")
 		self.Castbar = castbar
 
@@ -639,9 +639,15 @@ oUF:SetActiveStyle("Nev_Micro")
 local targettarget = oUF:Spawn("targettarget", "oUF_TargetTarget")
 targettarget:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 460, -35)
 
-local targettargettarget = oUF:Spawn("targettarget", "oUF_TargetTargetTarget")
+local targettargettarget = oUF:Spawn("targettargettarget", "oUF_TargetTargetTarget")
 targettargettarget:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 460, -63)
 
 oUF:SetActiveStyle("Nev_Tiny")
 local pet = oUF:Spawn("pet", "oUF_Pet")
 pet:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -90)
+
+oUF:SetActiveStyle("Nev")
+local party = oUF:Spawn("header", "oUF_Party")
+party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -120)
+party:SetManyAttributes("showParty", true, "yOffset", -25)
+party:Hide()

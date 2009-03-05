@@ -325,6 +325,8 @@ end
 local function style(settings, self, unit)
 	self:RegisterForClicks("anyup")
 	self:SetAttribute("*type2", "menu")
+	self:SetScript("OnEnter", OnEnter)
+	self:SetScript("OnLeave", OnLeave)
 
 	local micro = settings["nev-micro"]
 	local tiny = settings["nev-tiny"]

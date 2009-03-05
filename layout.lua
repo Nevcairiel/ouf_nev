@@ -398,9 +398,9 @@ local function style(settings, self, unit)
 		hp.colorReaction = true
 		self.OverrideUpdateHealth = updateHealthBarWithReaction
 	end
-	
+
 	-- Healthbar text
-	hp.value = getFontString(hp)
+	hp.value = getFontString(hp, "RIGHT")
 	hp.value:SetPoint("RIGHT", -2, 0)
 
 	self.Health = hp
@@ -413,8 +413,9 @@ local function style(settings, self, unit)
 	icon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 	self.RaidIcon = icon
 
-	self.Name = getFontString(hp)
+	self.Name = getFontString(hp, "LEFT")
 	self.Name:SetPoint("LEFT", 2, 0)
+	self.Name:SetPoint("RIGHT", hp.value, "LEFT", 2, 0)
 	self:RegisterEvent("UNIT_NAME_UPDATE", updateName)
 	self:RegisterEvent("UNIT_LEVEL", updateName)
 
@@ -468,7 +469,7 @@ local function style(settings, self, unit)
 		self.Power = pp
 		self.PostUpdatePower = updatePower
 
-		pp.value = getFontString(pp)
+		pp.value = getFontString(pp, "RIGHT")
 		pp.value:SetPoint("RIGHT", -2, 0)
 
 		self.Lvl = getFontString(pp)
@@ -477,8 +478,9 @@ local function style(settings, self, unit)
 		self.Class = getFontString(pp)
 		self.Class:SetPoint("LEFT", self.Lvl, "RIGHT",  1, 0)
 
-		self.Race = getFontString(pp)
+		self.Race = getFontString(pp, "LEFT")
 		self.Race:SetPoint("LEFT", self.Class, "RIGHT",  1, 0)
+		self.Race:SetPoint("RIGHT", pp.value, "LEFT",  1, 0)
 	end
 
 	if not unit or unit == "player" then --raid, party or player gets a leader icon

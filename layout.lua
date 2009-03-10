@@ -596,6 +596,8 @@ local function style(settings, self, unit)
 		self.SetAuraPosition = SetAuraPosition
 	end
 
+	self.disallowVehicleSwap = true
+
 	return self
 end
 

@@ -648,8 +648,14 @@ oUF:SetActiveStyle("Nev_Tiny")
 local pet = oUF:Spawn("pet", "oUF_Pet")
 pet:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -90)
 
+local focus = oUF:Spawn("focus", "oUF_Focus")
+focus:SetScale(1.2)
+focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -390)
+
 oUF:SetActiveStyle("Nev")
 local party = oUF:Spawn("header", "oUF_Party")
 party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -120)
 party:SetManyAttributes("showParty", true, "yOffset", -25)
-party:Hide()
+party:Show()
+
+RegisterStateDriver(party, "visibility", "[group:raid]hide;show")

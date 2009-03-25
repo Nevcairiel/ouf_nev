@@ -543,7 +543,7 @@ local function style(settings, self, unit)
 
 		self.CPoints = {}
 		for i=1,MAX_COMBO_POINTS do
-			local c = castbar:CreateTexture(nil, "OVERLAY")
+			local c = hp:CreateTexture(nil, "OVERLAY")
 			c:SetTexture("Interface\\AddOns\\oUF_Nev\\media\\combo")
 			c:SetHeight(10)
 			c:SetWidth(10)

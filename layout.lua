@@ -114,50 +114,46 @@ formats.target.health = fmt_percminmax
 formats.targettarget.health = fmt_perc
 formats.targettargettarget.health = fmt_perc
 
-local updateHealthBarWithReaction
-do
-	function updateHealthBarWithReaction(self, event, unit, bar, min, max)
-		local r, g, b, t
-		if(bar.colorTapping and UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit)) then
-			t = self.colors.tapped
-		elseif(bar.colorDisconnected and not UnitIsConnected(unit)) then
-			t = self.colors.disconnected
-		elseif(bar.colorReaction and not UnitIsFriend(unit, "player")) then
-			if UnitPlayerControlled(unit) then
-				if UnitCanAttack("player", unit) then
-					r, g, b = red
-				else
-					r, g, b = 0.68, 0.33, 0.38
-				end
+local function updateHealthBarWithReaction(self, event, unit, bar, min, max)
+	local r, g, b, t
+	if bar.colorTapping and UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) then
+		t = self.colors.tapped
+	elseif bar.colorDisconnected and not UnitIsConnected(unit) then
+		t = self.colors.disconnected
+	elseif bar.colorReaction and not UnitIsFriend(unit, "player") then
+		if UnitPlayerControlled(unit) then
+			if UnitCanAttack("player", unit) then
+				r, g, b = red
 			else
-				local reaction = UnitReaction(unit, "player")
-				if reaction then
-					if reaction > 4 then
-						t = green
-					elseif reaction == 4 then
-						t = yellow
-					elseif reaction < 4 then
-						t = red
-					end
+				r, g, b = 0.68, 0.33, 0.38
+			end
+		else
+			local reaction = UnitReaction(unit, "player")
+			if reaction then
+				if reaction > 4 then
+					t = green
+				elseif reaction == 4 then
+					t = yellow
+				elseif reaction < 4 then
+					t = red
 				end
 			end
-		elseif(bar.colorSmooth and max ~= 0) then
-			r, g, b = self.ColorGradient(min / max, unpack(bar.smoothGradient or self.colors.smooth))
-		elseif(bar.colorHealth) then
-			t = self.colors.health
 		end
+	elseif bar.colorSmooth and max ~= 0 then
+		r, g, b = self.ColorGradient(min / max, unpack(bar.smoothGradient or self.colors.smooth))
+	elseif bar.colorHealth then
+		t = self.colors.health
+	end
 
-		if(t) then
-			r, g, b = t[1], t[2], t[3]
-		end
+	if t then
+		r, g, b = t[1], t[2], t[3]
+	end
 
-		if(b) then
-			bar:SetStatusBarColor(r, g, b)
-
-			local bg = bar.bg
-			if(bg) then
-				bg:SetVertexColor(r, g, b)
-			end
+	if b then
+		bar:SetStatusBarColor(r, g, b)
+		local bg = bar.bg
+		if bg then
+			bg:SetVertexColor(r, g, b)
 		end
 	end
 end
@@ -271,7 +267,7 @@ local function getFontString(parent, justify, size)
 end
 
 local function SetAuraPosition(self, icons, x)
-	if(icons and x > 0) then
+	if icons and x > 0 then
 		local col = 0
 		local row = 0
 		local spacing = 2
@@ -319,8 +315,8 @@ local function SetAuraPosition(self, icons, x)
 		row, col = rows - 1, cols - 1
 		for i = offset + 1, (offset + showDebuffs) do
 			local button = icons[i]
-			if(button and button:IsShown()) then
-				if(col < 0) then
+			if button and button:IsShown() then
+				if col < 0 then
 					col = cols - 1
 					row = row - 1
 				end
@@ -585,7 +581,7 @@ local function style(settings, self, unit)
 			auras.buffFilter = "RAID|HELPFUL"
 			auras.debuffFilter = "RAID|HARMFUL"
 		elseif not unit then -- party frames
-			auras.rows = 2
+			auras.rows = 1
 			auras.cols = 11
 			auras.buffFilter = "RAID|HELPFUL"
 			auras.debuffFilter = "RAID|HARMFUL"
@@ -655,7 +651,7 @@ focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -390)
 oUF:SetActiveStyle("Nev")
 local party = oUF:Spawn("header", "oUF_Party")
 party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -120)
-party:SetManyAttributes("showParty", true, "yOffset", -25)
+party:SetManyAttributes("showParty", true, "yOffset", -10)
 party:Show()
 
 RegisterStateDriver(party, "visibility", "[group:raid]hide;show")

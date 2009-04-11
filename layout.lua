@@ -52,10 +52,10 @@ local function formatLargeValue(value)
 end
 
 local classificationFormats = {
-	worldboss = "?? Boss",
-	rareelite = "%d+ Rare",
-	elite = "%d+",
-	rare = "%d Rare",
+	worldboss = "?? |cffff0000Boss|r",
+	rareelite = "%d|cffffcc00+|r |cffffaaffRare|r",
+	elite = "%d|cffffcc00+|r",
+	rare = "%d |cffff66ffRare|r",
 	normal = "%d",
 	trivial = "%d",
 }

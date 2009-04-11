@@ -688,7 +688,7 @@ party:Show()
 
 oUF:SetActiveStyle("Nev_MicroMT")
 local MTs = oUF:Spawn("header", "oUF_MTs")
-MTs:SetPoint("CENTER", 0, -200)
+MTs:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -140)
 MTs:SetManyAttributes(
 	"template", "oUF_Nev_MTTemplate",
 	"showRaid", true,

@@ -503,7 +503,7 @@ local function style(settings, self, unit)
 		self.Race:SetPoint("RIGHT", pp.value, "LEFT",  1, 0)
 	end
 
-	if not unit or unit == "player" then --raid, party or player gets a leader icon
+	if (not mt and not unit) or unit == "player" then --raid, party or player gets a leader icon
 		local leader = hp:CreateTexture(nil, "OVERLAY")
 		leader:SetHeight(12)
 		leader:SetWidth(12)
@@ -583,7 +583,7 @@ local function style(settings, self, unit)
 		end})
 	end
 
-	if unit == "target" or unit == "pet" or not unit then
+	if not micro and (unit == "target" or unit == "pet" or not unit) then
 		local auras = CreateFrame("Frame", nil, self)
 		auras:SetHeight(16)
 		auras:SetPoint("TOPRIGHT", self, "BOTTOMRIGHT", -4, 2)

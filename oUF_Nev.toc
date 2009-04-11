@@ -5,4 +5,5 @@
 ## Notes: Nevcairiel oUF layout.
 ## Dependencies: oUF
 
+oUF_Nev.xml
 layout.lua

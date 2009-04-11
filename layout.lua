@@ -113,6 +113,8 @@ local formats = setmetatable({}, {
 formats.target.health = fmt_percminmax
 formats.targettarget.health = fmt_perc
 formats.targettargettarget.health = fmt_perc
+formats.raid.health = fmt_perc
+formats.raidtarget.health = fmt_perc
 
 local function updateHealthBarWithReaction(self, event, unit, bar, min, max)
 	local r, g, b, t
@@ -346,6 +348,15 @@ local function postCreateAuraIcon(self, button, icons, index, debuff)
 	Count:SetJustifyH("RIGHT")
 end
 
+local function fixNamePos(self, state)
+	local name = self.Name
+	if state then
+		name:SetPoint("LEFT", 16, 0)
+	else
+		name:SetPoint("LEFT", 2, 0)
+	end
+end
+
 local function style(settings, self, unit)
 	self.menu = menu
 	self.unit = unit
@@ -356,6 +367,7 @@ local function style(settings, self, unit)
 
 	local micro = settings["nev-micro"]
 	local tiny = settings["nev-tiny"]
+	local mt = settings["nev-mt"]
 
 	-- Background
 	self:SetBackdrop(backdrop)
@@ -381,6 +393,9 @@ local function style(settings, self, unit)
 	hp.bg:SetAlpha(0.25)
 
 	-- healthbar coloring
+	if mt then
+		hp.colorClass = true
+	end
 	hp.colorTapping = true
 	hp.colorDisconnected = true
 	hp.colorSmooth = true
@@ -403,10 +418,19 @@ local function style(settings, self, unit)
 	self.PostUpdateHealth = updateHealth
 
 	local icon = hp:CreateTexture(nil, "OVERLAY")
-	icon:SetHeight(16)
-	icon:SetWidth(16)
-	icon:SetPoint("TOP", self, 0, 5)
-	icon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
+	if micro then
+		icon:SetHeight(14)
+		icon:SetWidth(14)
+		icon:SetPoint("LEFT", 1, 0)
+		icon.oShow = icon.Show
+		icon.Show = function(this) this:oShow() fixNamePos(self, true) end
+		icon.oHide = icon.Hide
+		icon.Hide = function(this) this:oHide() fixNamePos(self, false) end
+	else
+		icon:SetHeight(16)
+		icon:SetWidth(16)
+		icon:SetPoint("TOP", self, 0, 5)
+	end
 	self.RaidIcon = icon
 
 	self.Name = getFontString(hp, "LEFT")
@@ -624,6 +648,14 @@ oUF:RegisterStyle("Nev_Micro", setmetatable({
 	["nev-micro"] = true,
 }, {__call = style}))
 
+oUF:RegisterStyle("Nev_MicroMT", setmetatable({
+	["initial-width"] = 135,
+	["initial-height"] = 28,
+	["initial-scale"] = 1.0,
+	["nev-micro"] = true,
+	["nev-mt"] = true,
+}, {__call = style}))
+
 
 oUF:SetActiveStyle("Nev")
 local player = oUF:Spawn("player", "oUF_Player")
@@ -653,5 +685,17 @@ local party = oUF:Spawn("header", "oUF_Party")
 party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -120)
 party:SetManyAttributes("showParty", true, "yOffset", -10)
 party:Show()
+
+oUF:SetActiveStyle("Nev_MicroMT")
+local MTs = oUF:Spawn("header", "oUF_MTs")
+MTs:SetPoint("CENTER", 0, -200)
+MTs:SetManyAttributes(
+	"template", "oUF_Nev_MTTemplate",
+	"showRaid", true,
+	"groupFilter", "MAINTANK",
+	"groupBy", "ROLE",
+	"groupingOrder", "1,2,3,4,5,6,7,8"
+)
+MTs:Show()
 
 RegisterStateDriver(party, "visibility", "[group:raid]hide;show")

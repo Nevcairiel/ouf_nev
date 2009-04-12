@@ -461,10 +461,9 @@ local function style(settings, self, unit)
 
 	-- micro is only the health bar and associated strings, anything that follows is not micro anymore
 	-- Only ToT/ToToT frames
-	local pp
 	if not micro then
 		-- Power Bar
-		pp = CreateFrame("StatusBar", nil, self)
+		local pp = CreateFrame("StatusBar", nil, self)
 		pp:SetHeight(ppheight)
 		pp:SetStatusBarTexture(statusbartexture)
 		pp:SetAlpha(0.8)
@@ -501,119 +500,121 @@ local function style(settings, self, unit)
 		self.Race = getFontString(pp, "LEFT")
 		self.Race:SetPoint("LEFT", self.Class, "RIGHT",  1, 0)
 		self.Race:SetPoint("RIGHT", pp.value, "LEFT",  1, 0)
-	end
 
-	if (not mt and not unit) or unit == "player" then --raid, party or player gets a leader icon
-		local leader = hp:CreateTexture(nil, "OVERLAY")
-		leader:SetHeight(12)
-		leader:SetWidth(12)
-		leader:SetPoint("TOPLEFT", self, -1, 3)
-		leader:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
-		self.Leader = leader
-	end
-
-	if unit == "player" then -- player gets resting and combat
-		local resting = pp:CreateTexture(nil, "OVERLAY")
-		resting:SetHeight(14)
-		resting:SetWidth(14)
-		resting:SetPoint("BOTTOMLEFT", -8, -8)
-		resting:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
-		resting:SetTexCoord(0.09, 0.43, 0.08, 0.42)
-		self.Resting = resting
-
-		local combat = pp:CreateTexture(nil, "OVERLAY")
-		combat:SetHeight(12)
-		combat:SetWidth(12)
-		combat:SetPoint("BOTTOMLEFT", -6, -6)
-		combat:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
-		combat:SetTexCoord(0.57, 0.90, 0.08, 0.41)
-		self.Combat = combat
-	end
-
-	-- Target has CPoints and a castbar
-	if unit == "target" then
-		local castbar = CreateFrame("StatusBar", nil, self)
-		castbar:SetPoint("LEFT", 5, 0)
-		castbar:SetPoint("RIGHT", -5, 0)
-		castbar:SetPoint("TOP", pp, "BOTTOM", 0, -1)
-		castbar:SetStatusBarTexture(statusbartexture)
-		castbar:SetStatusBarColor(1, 0.7, 0)
-		--castbar:SetBackdrop(backdrop)
-		--castbar:SetBackdropColor(0, 0, 0)
-		castbar:SetHeight(12)
-		castbar:SetAlpha(0.8)
-
-		castbar.Text = getFontString(castbar, nil, 10)
-		castbar.Text:SetPoint("LEFT", castbar, 2, 0)
-
-		castbar.Time = getFontString(castbar, nil, 10)
-		castbar.Time:SetJustifyH("RIGHT")
-		castbar.Time:SetPoint("RIGHT", castbar, -2, 0)
-
-		castbar.bg = castbar:CreateTexture(nil, 'BORDER')
-		castbar.bg:SetAllPoints(castbar)
-		castbar.bg:SetTexture(statusbartexture)
-		castbar.bg:SetVertexColor(0.25, 0.25, 0.25, 0.35)
-		castbar.bg:SetAlpha(.2)
-
-		castbar.Spark = castbar:CreateTexture(nil, "OVERLAY")
-		castbar.Spark:SetWidth(4)
-		castbar.Spark:SetBlendMode("ADD")
-		self.Castbar = castbar
-
-		self.CPoints = {}
-		for i=1,MAX_COMBO_POINTS do
-			local c = hp:CreateTexture(nil, "OVERLAY")
-			c:SetTexture("Interface\\AddOns\\oUF_Nev\\media\\combo")
-			c:SetHeight(10)
-			c:SetWidth(10)
-			if i > 1 then
-				c:SetPoint("BOTTOMRIGHT",self.CPoints[i-1],"BOTTOMLEFT")
-			else
-				c:SetPoint("BOTTOMRIGHT",self,"BOTTOMRIGHT",-4,1)
-			end
-			tinsert(self.CPoints, c)
+		if not unit or unit == "player" then --raid, party or player gets a leader icon
+			local leader = hp:CreateTexture(nil, "OVERLAY")
+			leader:SetHeight(12)
+			leader:SetWidth(12)
+			leader:SetPoint("TOPLEFT", self, -1, 3)
+			leader:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
+			self.Leader = leader
 		end
-		-- a metatable hack to always query UnitHasVehicleUI on CP updates
-		setmetatable(self.CPoints, {__index = function(t, k)
-			if k == "unit" then
-				return UnitHasVehicleUI("player") and "vehicle" or "player"
-			end
-			return nil
-		end})
-	end
 
-	if not micro and (unit == "target" or unit == "pet" or not unit) then
-		local auras = CreateFrame("Frame", nil, self)
-		auras:SetHeight(16)
-		auras:SetPoint("TOPRIGHT", self, "BOTTOMRIGHT", -4, 2)
-		auras:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 4, 2)
-		auras.width = settings["initial-width"] - 8
-		auras.initialAnchor = "TOPLEFT"
-		auras["growth-x"] = "RIGHT"
-		auras["growth-y"] = "DOWN"
-		auras.spacing = 2
-		auras.disableCooldown = true
-		auras.showDebuffType = true
+		if unit == "player" then -- player gets resting and combat
+			local resting = pp:CreateTexture(nil, "OVERLAY")
+			resting:SetHeight(14)
+			resting:SetWidth(14)
+			resting:SetPoint("BOTTOMLEFT", -8, -8)
+			resting:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
+			resting:SetTexCoord(0.09, 0.43, 0.08, 0.42)
+			self.Resting = resting
+
+			local combat = pp:CreateTexture(nil, "OVERLAY")
+			combat:SetHeight(12)
+			combat:SetWidth(12)
+			combat:SetPoint("BOTTOMLEFT", -6, -6)
+			combat:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
+			combat:SetTexCoord(0.57, 0.90, 0.08, 0.41)
+			self.Combat = combat
+		end
+
+		-- Target has CPoints and a castbar
+		if settings['nev-castbar'] then
+			local castbar = CreateFrame("StatusBar", nil, self)
+			castbar:SetPoint("LEFT", 5, 0)
+			castbar:SetPoint("RIGHT", -5, 0)
+			castbar:SetPoint("TOP", pp, "BOTTOM", 0, -1)
+			castbar:SetStatusBarTexture(statusbartexture)
+			castbar:SetStatusBarColor(1, 0.7, 0)
+			--castbar:SetBackdrop(backdrop)
+			--castbar:SetBackdropColor(0, 0, 0)
+			castbar:SetHeight(12)
+			castbar:SetAlpha(0.8)
+
+			castbar.Text = getFontString(castbar, nil, 10)
+			castbar.Text:SetPoint("LEFT", castbar, 2, 0)
+
+			castbar.Time = getFontString(castbar, nil, 10)
+			castbar.Time:SetJustifyH("RIGHT")
+			castbar.Time:SetPoint("RIGHT", castbar, -2, 0)
+
+			castbar.bg = castbar:CreateTexture(nil, 'BORDER')
+			castbar.bg:SetAllPoints(castbar)
+			castbar.bg:SetTexture(statusbartexture)
+			castbar.bg:SetVertexColor(0.25, 0.25, 0.25, 0.35)
+			castbar.bg:SetAlpha(.2)
+
+			castbar.Spark = castbar:CreateTexture(nil, "OVERLAY")
+			castbar.Spark:SetWidth(4)
+			castbar.Spark:SetBlendMode("ADD")
+			self.Castbar = castbar
+		end
 
 		if unit == "target" then
-			auras.rows = 4
-			auras.cols = 11
-		elseif unit == "pet" then
-			auras.rows = 1
-			auras.cols = 11
-			auras.buffFilter = "RAID|HELPFUL"
-			auras.debuffFilter = "RAID|HARMFUL"
-		elseif not unit then -- party frames
-			auras.rows = 1
-			auras.cols = 11
-			auras.buffFilter = "RAID|HELPFUL"
-			auras.debuffFilter = "RAID|HARMFUL"
+			self.CPoints = {}
+			for i=1,MAX_COMBO_POINTS do
+				local c = hp:CreateTexture(nil, "OVERLAY")
+				c:SetTexture("Interface\\AddOns\\oUF_Nev\\media\\combo")
+				c:SetHeight(10)
+				c:SetWidth(10)
+				if i > 1 then
+					c:SetPoint("BOTTOMRIGHT",self.CPoints[i-1],"BOTTOMLEFT")
+				else
+					c:SetPoint("BOTTOMRIGHT",self,"BOTTOMRIGHT",-4,1)
+				end
+				tinsert(self.CPoints, c)
+			end
+			-- a metatable hack to always query UnitHasVehicleUI on CP updates
+			setmetatable(self.CPoints, {__index = function(t, k)
+				if k == "unit" then
+					return UnitHasVehicleUI("player") and "vehicle" or "player"
+				end
+				return nil
+			end})
 		end
 
-		self.Auras = auras
-		self.PostCreateAuraIcon = postCreateAuraIcon
-		self.SetAuraPosition = SetAuraPosition
+		if unit == "target" or unit == "pet" or not unit then
+			local auras = CreateFrame("Frame", nil, self)
+			auras:SetHeight(16)
+			auras:SetPoint("TOPRIGHT", self, "BOTTOMRIGHT", -4, 2)
+			auras:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 4, 2)
+			auras.width = settings["initial-width"] - 8
+			auras.initialAnchor = "TOPLEFT"
+			auras["growth-x"] = "RIGHT"
+			auras["growth-y"] = "DOWN"
+			auras.spacing = 2
+			auras.disableCooldown = true
+			auras.showDebuffType = true
+
+			if unit == "target" then
+				auras.rows = 4
+				auras.cols = 11
+			elseif unit == "pet" then
+				auras.rows = 1
+				auras.cols = 11
+				auras.buffFilter = "RAID|HELPFUL"
+				auras.debuffFilter = "RAID|HARMFUL"
+			elseif not unit then -- party frames
+				auras.rows = 1
+				auras.cols = 11
+				auras.buffFilter = "RAID|HELPFUL"
+				auras.debuffFilter = "RAID|HARMFUL"
+			end
+
+			self.Auras = auras
+			self.PostCreateAuraIcon = postCreateAuraIcon
+			self.SetAuraPosition = SetAuraPosition
+		end
 	end
 
 	self.disallowVehicleSwap = true
@@ -631,7 +632,7 @@ oUF:RegisterStyle("NevCastBar", setmetatable({
 	["initial-width"] = 170,
 	["initial-height"] = 59,
 	["initial-scale"] = 1.3,
-	["castbar"] = true,
+	["nev-castbar"] = true,
 }, {__call = style}))
 
 oUF:RegisterStyle("Nev_Tiny", setmetatable({
@@ -692,8 +693,9 @@ MTs:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -140)
 MTs:SetManyAttributes(
 	"template", "oUF_Nev_MTTemplate",
 	"showRaid", true,
-	"groupFilter", "MAINTANK",
+	"yOffset", 1,
 	"groupBy", "ROLE",
+	"groupFilter", "MAINTANK",
 	"groupingOrder", "1,2,3,4,5,6,7,8"
 )
 MTs:Show()

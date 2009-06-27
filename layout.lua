@@ -6,7 +6,7 @@ local UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByP
       UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByPlayer, UnitClass,
       UnitPlayerControlled, UnitCanAttack, UnitLevel, UnitHasVehicleUI, UnitClassification, UnitName, UnitIsPlayer,
       UnitCreatureFamily, UnitCreatureType, UnitIsDead, UnitIsGhost, UnitRace
-local GetDifficultyColor = GetDifficultyColor
+local GetDifficultyColor = GetDifficultyColor or GetQuestDifficultyColor
 local RAID_CLASS_COLORS, MAX_COMBO_POINTS = RAID_CLASS_COLORS, MAX_COMBO_POINTS
 
 local format, strfind, gsub, strsub, strupper = string.format, string.find, string.gsub, string.sub, string.upper

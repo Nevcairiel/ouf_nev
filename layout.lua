@@ -115,6 +115,7 @@ formats.targettarget.health = fmt_perc
 formats.targettargettarget.health = fmt_perc
 formats.raid.health = fmt_perc
 formats.raidtarget.health = fmt_perc
+formats.focus.health = fmt_percminmax
 
 local function updateHealthBarWithReaction(self, event, unit, bar, min, max)
 	local r, g, b, t

@@ -618,7 +618,7 @@ local function style(settings, self, unit)
 		end
 	end
 
-	self.disallowVehicleSwap = true
+	--self.disallowVehicleSwap = true
 
 	return self
 end

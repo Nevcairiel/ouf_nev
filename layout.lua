@@ -502,20 +502,26 @@ local function style(settings, self, unit)
 		self.Race:SetPoint("LEFT", self.Class, "RIGHT",  1, 0)
 		self.Race:SetPoint("RIGHT", pp.value, "LEFT",  1, 0)
 
-		if not unit or unit == "player" then --raid, party or player gets a leader icon
+		if not unit or unit == "player" then --raid, party or player gets a leader and a LFD icon
 			local leader = hp:CreateTexture(nil, "OVERLAY")
 			leader:SetHeight(12)
 			leader:SetWidth(12)
 			leader:SetPoint("TOPLEFT", self, -1, 3)
 			leader:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
 			self.Leader = leader
+
+			local lfd = pp:CreateTexture(nil, "OVERLAY")
+			lfd:SetHeight(16)
+			lfd:SetWidth(16)
+			lfd:SetPoint("BOTTOMLEFT", self, -3, -3)
+			self.LFDRole = lfd
 		end
 
 		if unit == "player" then -- player gets resting and combat
 			local resting = pp:CreateTexture(nil, "OVERLAY")
 			resting:SetHeight(14)
 			resting:SetWidth(14)
-			resting:SetPoint("BOTTOMLEFT", -8, -8)
+			resting:SetPoint("BOTTOMRIGHT", 8, -8)
 			resting:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
 			resting:SetTexCoord(0.09, 0.43, 0.08, 0.42)
 			self.Resting = resting
@@ -523,7 +529,7 @@ local function style(settings, self, unit)
 			local combat = pp:CreateTexture(nil, "OVERLAY")
 			combat:SetHeight(12)
 			combat:SetWidth(12)
-			combat:SetPoint("BOTTOMLEFT", -6, -6)
+			combat:SetPoint("BOTTOMRIGHT", 6, -6)
 			combat:SetTexture("Interface\\CharacterFrame\\UI-StateIcon")
 			combat:SetTexCoord(0.57, 0.90, 0.08, 0.41)
 			self.Combat = combat

@@ -514,10 +514,13 @@ local function style(settings, self, unit)
 			leader:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
 			self.Leader = leader
 
-			local lfd = pp:CreateTexture(nil, "OVERLAY")
-			lfd:SetHeight(16)
-			lfd:SetWidth(16)
-			lfd:SetPoint("BOTTOMLEFT", self, -3, -3)
+			local lfdc = CreateFrame("Frame", nil, self)
+			lfdc:SetHeight(16)
+			lfdc:SetWidth(16)
+			lfdc:SetPoint("BOTTOMLEFT", self, -3, -3)
+			lfdc:SetFrameLevel(lfdc:GetFrameLevel() + 2)
+			local lfd = lfdc:CreateTexture(nil, "OVERLAY")
+			lfd:SetAllPoints(lfdc)
 			self.LFDRole = lfd
 		end
 

@@ -16,4 +16,25 @@
 			</Button>
 		</Frames>
 	</Button>
+	<Button name="oUF_Nev_PartyTemplate" inherits="SecureUnitButtonTemplate" hidden="true" virtual="true">
+		<Frames>
+			<Button name="$parentPet" inherits="SecureUnitButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT">
+						<Offset x="5" y="-31"/>
+					</Anchor>
+				</Anchors>
+				<Attributes>
+					<Attribute name="oUF_NevPet" type="boolean" value="true"/>
+					<Attribute name="unitsuffix" type="string" value="pet"/>
+					<Attribute name="useparent-unit" type="boolean" value="true"/>
+					<Attribute name="*type1" type="string" value="target"/>
+					<Attribute name="initial-unitWatch" type="boolean" value="true"/>
+					<Attribute name="initial-width" type="string" value="135"/>
+					<Attribute name="initial-height" type="string" value="28"/>
+					<Attribute name="initial-scale" type="string" value="0.75"/>
+				</Attributes>
+			</Button>
+		</Frames>
+	</Button>
 </Ui>

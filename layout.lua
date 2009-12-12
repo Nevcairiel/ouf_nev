@@ -370,6 +370,10 @@ local function style(settings, self, unit)
 	local tiny = settings["nev-tiny"]
 	local mt = settings["nev-mt"]
 
+	if self:GetAttribute("oUF_NevPet") then
+		micro, tiny, mt = true, nil, nil
+	end
+
 	-- Background
 	self:SetBackdrop(backdrop)
 	self:SetBackdropColor(0,0,0,0.5)
@@ -691,7 +695,11 @@ focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -390)
 oUF:SetActiveStyle("Nev")
 local party = oUF:Spawn("header", "oUF_Party")
 party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -120)
-party:SetManyAttributes("showParty", true, "yOffset", -10)
+party:SetManyAttributes(
+	"template", "oUF_Nev_PartyTemplate",
+	"showParty", true,
+	"yOffset", -10
+)
 party:Show()
 
 oUF:SetActiveStyle("Nev_MicroMT")

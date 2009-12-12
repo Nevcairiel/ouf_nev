@@ -515,8 +515,8 @@ local function style(settings, self, unit)
 			self.Leader = leader
 
 			local lfdc = CreateFrame("Frame", nil, self)
-			lfdc:SetHeight(16)
-			lfdc:SetWidth(16)
+			lfdc:SetHeight(12)
+			lfdc:SetWidth(12)
 			lfdc:SetPoint("BOTTOMLEFT", self, -3, -3)
 			lfdc:SetFrameLevel(lfdc:GetFrameLevel() + 2)
 			local lfd = lfdc:CreateTexture(nil, "OVERLAY")

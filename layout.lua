@@ -597,7 +597,7 @@ local function style(settings, self, unit)
 			end})
 		end
 
-		if unit == "target" or unit == "pet" or not unit then
+		if unit == "target" or unit == "pet" or unit == "player" or not unit then
 			local auras = CreateFrame("Frame", nil, self)
 			auras:SetHeight(16)
 			auras:SetPoint("TOPRIGHT", self, "BOTTOMRIGHT", -4, 2)
@@ -609,19 +609,16 @@ local function style(settings, self, unit)
 			auras.spacing = 2
 			auras.disableCooldown = true
 			auras.showDebuffType = true
+			auras.rows = 1
+			auras.cols = 11
 
 			if unit == "target" then
 				auras.rows = 4
-				auras.cols = 11
-			elseif unit == "pet" then
-				auras.rows = 1
-				auras.cols = 11
+			elseif unit == "pet" or not unit then
 				auras.buffFilter = "RAID|HELPFUL"
 				auras.debuffFilter = "RAID|HARMFUL"
-			elseif not unit then -- party frames
-				auras.rows = 1
-				auras.cols = 11
-				auras.buffFilter = "RAID|HELPFUL"
+			elseif unit == "player" then
+				auras.numBuffs = 0
 				auras.debuffFilter = "RAID|HARMFUL"
 			end
 

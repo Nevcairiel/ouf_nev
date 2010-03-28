@@ -11,7 +11,7 @@ local RAID_CLASS_COLORS, MAX_COMBO_POINTS = RAID_CLASS_COLORS, MAX_COMBO_POINTS
 
 local format, strfind, gsub, strsub, strupper = string.format, string.find, string.gsub, string.sub, string.upper
 local floor, ceil, max, min = math.floor, math.ceil, math.max, math.min
-local unpack, type, select, tinsert =  unpack, type, select, table.insert
+local unpack, type, select, tinsert, tconcat =  unpack, type, select, table.insert, table.concat
 
 local backdrop = {
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground", tile = true, tileSize = 16,
@@ -707,10 +707,43 @@ MTs:SetManyAttributes(
 	"template", "oUF_Nev_MTTemplate",
 	"showRaid", true,
 	"yOffset", 1,
-	"groupBy", "ROLE",
-	"groupFilter", "MAINTANK",
-	"groupingOrder", "1,2,3,4,5,6,7,8"
+	"initial-unitWatch", true,
+	"sortDir", "ASC"
 )
+
+if oRA3 then
+	local tankhandler = CreateFrame("Frame")
+
+	tankhandler:SetScript("OnEvent", function(self, event)
+		if event == "PLAYER_REGEN_ENABLED" then
+			self:UpdateTanks()
+			self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+		end
+	end)
+
+	function tankhandler:UpdateTanks(tanks)
+		if not tanks then tanks = oRA3:GetSortedTanks() end
+		MTs:SetAttribute("nameList", tconcat(tanks, ","))
+	end
+
+	function tankhandler:OnTanksUpdated(event, tanks)
+		if InCombatLockdown() then
+			self:RegisterEvent("PLAYER_REGEN_ENABLED")
+		else
+			self:UpdateTanks(tanks)
+		end
+	end
+
+	tankhandler:UpdateTanks()
+	oRA3.RegisterCallback(tankhandler, "OnTanksUpdated")
+else
+	MTs:SetManyAttributes(
+		"groupBy", "ROLE",
+		"groupFilter", "MAINTANK",
+		"groupingOrder", "1,2,3,4,5,6,7,8"
+	)
+end
+
 MTs:Show()
 
 RegisterStateDriver(party, "visibility", "[group:raid]hide;show")

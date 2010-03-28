@@ -4,6 +4,7 @@
 ## Version: 1.0
 ## Notes: Nevcairiel oUF layout.
 ## Dependencies: oUF
+## OptionalDeps: oRA3
 
 oUF_Nev.xml
 layout.lua

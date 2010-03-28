@@ -28,6 +28,14 @@ local white = { r = 1, g = 1, b = 1}
 local smoothGradient = {0.9,  0.2, 0.3, 
                           1, 0.85, 0.1, 
                         0.4, 0.95, 0.3}
+-- fix oUF colors
+for i = 1,3 do
+	oUF.colors.reaction[i] = red
+end
+oUF.colors.reaction[4] = yellow
+for i = 5,8 do
+	oUF.colors.reaction[i] = green
+end
 
 -- This is the core of RightClick menus on diffrent frames
 local function menu(self)
@@ -117,50 +125,6 @@ formats.raid.health = fmt_perc
 formats.raidtarget.health = fmt_perc
 formats.focus.health = fmt_percminmax
 
-local function updateHealthBarWithReaction(self, event, unit, bar, min, max)
-	local r, g, b, t
-	if bar.colorTapping and UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) then
-		t = self.colors.tapped
-	elseif bar.colorDisconnected and not UnitIsConnected(unit) then
-		t = self.colors.disconnected
-	elseif bar.colorReaction and not UnitIsFriend(unit, "player") then
-		if UnitPlayerControlled(unit) then
-			if UnitCanAttack("player", unit) then
-				r, g, b = red
-			else
-				r, g, b = 0.68, 0.33, 0.38
-			end
-		else
-			local reaction = UnitReaction(unit, "player")
-			if reaction then
-				if reaction > 4 then
-					t = green
-				elseif reaction == 4 then
-					t = yellow
-				elseif reaction < 4 then
-					t = red
-				end
-			end
-		end
-	elseif bar.colorSmooth and max ~= 0 then
-		r, g, b = self.ColorGradient(min / max, unpack(bar.smoothGradient or self.colors.smooth))
-	elseif bar.colorHealth then
-		t = self.colors.health
-	end
-
-	if t then
-		r, g, b = t[1], t[2], t[3]
-	end
-
-	if b then
-		bar:SetStatusBarColor(r, g, b)
-		local bg = bar.bg
-		if bg then
-			bg:SetVertexColor(r, g, b)
-		end
-	end
-end
-
 -- Change oUF Colors for the PowerBar
 oUF.colors.power.MANA = {0.3, 0.5, 0.85}
 oUF.colors.power.RAGE = {0.9, 0.2, 0.3}
@@ -232,7 +196,8 @@ local function OnLeave(self)
 	UnitFrame_OnLeave()
 end
 
-local function updateHealth(self, event, unit, bar, min, max)
+local function updateHealth(bar, unit, min, max)
+	local self = bar:GetParent()
 	if UnitIsDead(unit) then
 		bar:SetValue(0)
 		bar.value:SetText("Dead")
@@ -245,10 +210,11 @@ local function updateHealth(self, event, unit, bar, min, max)
 	else
 		formats[unit].health(bar.value, min, max)
 	end
-	self:UNIT_NAME_UPDATE(event, unit)
+
+	bar:GetParent():UNIT_NAME_UPDATE(nil, unit)
 end
 
-local function updatePower(self, event, unit, bar, min, max)
+local function updatePower(bar, unit, min, max)
 	if max == 0 or UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then
 		bar:SetValue(0)
 		if bar.value then
@@ -269,7 +235,7 @@ local function getFontString(parent, justify, size)
 	return fs
 end
 
-local function SetAuraPosition(self, icons, x)
+local function SetAuraPosition(icons, x)
 	if icons and x > 0 then
 		local col = 0
 		local row = 0
@@ -282,8 +248,9 @@ local function SetAuraPosition(self, icons, x)
 		local rows = icons.rows or 2
 		local maxicons = cols*rows
 		local isFriend = true
-		if self.unit == "target" or self.unit == "focus" then
-			isFriend = UnitIsFriend(self.unit, "player")
+		local unit = icons:GetParent().unit
+		if unit == "target" or unit == "focus" then
+			isFriend = UnitIsFriend(unit, "player")
 		end
 
 		local showBuffs, showDebuffs = 0, 0
@@ -331,7 +298,7 @@ local function SetAuraPosition(self, icons, x)
 	end
 end
 
-local function postCreateAuraIcon(self, button, icons, index, debuff)
+local function postCreateAuraIcon(icons, button)
 	local cols = icons.cols or 10
 	local rows = icons.rows or 2
 	local width = icons.width or icons:GetWidth() or self:GetWidth()
@@ -410,7 +377,6 @@ local function style(settings, self, unit)
 
 	if unit and strfind(unit, "target", 1, true) then
 		hp.colorReaction = true
-		self.OverrideUpdateHealth = updateHealthBarWithReaction
 	end
 
 	-- Healthbar text
@@ -418,7 +384,7 @@ local function style(settings, self, unit)
 	hp.value:SetPoint("RIGHT", -2, 0)
 
 	self.Health = hp
-	self.PostUpdateHealth = updateHealth
+	self.Health.PostUpdate = updateHealth
 
 	local icon = hp:CreateTexture(nil, "OVERLAY")
 	if micro then
@@ -489,7 +455,7 @@ local function style(settings, self, unit)
 		end
 
 		self.Power = pp
-		self.PostUpdatePower = updatePower
+		self.Power.PostUpdate = updatePower
 
 		pp.value = getFontString(pp, "RIGHT")
 		pp.value:SetPoint("RIGHT", -2, 0)
@@ -621,12 +587,18 @@ local function style(settings, self, unit)
 			end
 
 			self.Auras = auras
-			self.PostCreateAuraIcon = postCreateAuraIcon
-			self.SetAuraPosition = SetAuraPosition
+			self.Auras.PostCreateIcon = postCreateAuraIcon
+			self.Auras.SetPosition = SetAuraPosition
 		end
 	end
 
 	--self.disallowVehicleSwap = true
+
+	for k,v in pairs(settings) do
+		if strfind(k, "initial-", 1, true) then
+			self:SetAttribute(k, v)
+		end
+	end
 
 	return self
 end
@@ -691,25 +663,23 @@ focus:SetScale(1.2)
 focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -390)
 
 oUF:SetActiveStyle("Nev")
-local party = oUF:Spawn("header", "oUF_Party")
-party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -120)
-party:SetManyAttributes(
+local party = oUF:SpawnHeader("oUF_Party", nil, "party",
 	"template", "oUF_Nev_PartyTemplate",
 	"showParty", true,
 	"yOffset", -10
 )
+party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -120)
 party:Show()
 
 oUF:SetActiveStyle("Nev_MicroMT")
-local MTs = oUF:Spawn("header", "oUF_MTs")
-MTs:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -140)
-MTs:SetManyAttributes(
+local MTs = oUF:SpawnHeader("oUF_MTs", nil, "raid",
 	"template", "oUF_Nev_MTTemplate",
 	"showRaid", true,
 	"yOffset", 1,
 	"initial-unitWatch", true,
 	"sortDir", "ASC"
 )
+MTs:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -140)
 
 if oRA3 then
 	local tankhandler = CreateFrame("Frame")

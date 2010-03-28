@@ -406,9 +406,7 @@ local function style(settings, self, unit)
 	hp.colorSmooth = true
 	hp.smoothGradient = smoothGradient
 
-	if unit == "player" then
-		hp.frequentUpdates = true
-	end
+	hp.frequentUpdates = true
 
 	if unit and strfind(unit, "target", 1, true) then
 		hp.colorReaction = true

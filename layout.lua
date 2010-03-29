@@ -540,7 +540,7 @@ local function style(settings, self, unit)
 		self.Race:SetPoint("LEFT", self.Class, "RIGHT",  1, 0)
 		self.Race:SetPoint("RIGHT", pp.value, "LEFT",  1, 0)
 
-		if not unit or unit == "player" then --raid, party or player gets a leader and a LFD icon
+		if unit == "party" or unit == "player" then --raid, party or player gets a leader and a LFD icon
 			local leader = hp:CreateTexture(nil, "OVERLAY")
 			leader:SetHeight(12)
 			leader:SetWidth(12)
@@ -624,7 +624,7 @@ local function style(settings, self, unit)
 			end
 		end
 
-		if unit == "target" or unit == "pet" or unit == "player" or not unit then
+		if unit == "target" or unit == "pet" or unit == "player" or unit == "party" then
 			local auras = CreateFrame("Frame", nil, self)
 			auras:SetHeight(16)
 			auras:SetPoint("TOPRIGHT", self, "BOTTOMRIGHT", -4, 2)
@@ -641,7 +641,7 @@ local function style(settings, self, unit)
 
 			if unit == "target" then
 				auras.rows = 4
-			elseif unit == "pet" or not unit then
+			elseif unit == "pet" or unit == "party" then
 				auras.buffFilter = "RAID|HELPFUL"
 				auras.debuffFilter = "RAID|HARMFUL"
 			elseif unit == "player" then

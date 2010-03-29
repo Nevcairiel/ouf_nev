@@ -7,7 +7,7 @@ local UnitReaction, UnitIsConnected, UnitIsFriend, UnitIsTapped, UnitIsTappedByP
       UnitPlayerControlled, UnitCanAttack, UnitLevel, UnitHasVehicleUI, UnitClassification, UnitName, UnitIsPlayer,
       UnitCreatureFamily, UnitCreatureType, UnitIsDead, UnitIsGhost, UnitRace
 local GetDifficultyColor = GetDifficultyColor or GetQuestDifficultyColor
-local RAID_CLASS_COLORS, MAX_COMBO_POINTS = RAID_CLASS_COLORS, MAX_COMBO_POINTS
+local MAX_COMBO_POINTS = MAX_COMBO_POINTS
 
 local format, strfind, gsub, strsub, strupper = string.format, string.find, string.gsub, string.sub, string.upper
 local floor, ceil, max, min = math.floor, math.ceil, math.max, math.min
@@ -24,18 +24,10 @@ local font = "Interface\\AddOns\\oUF_Nev\\media\\myriad.ttf"
 local red = {0.9, 0.2, 0.3}
 local yellow = {1, 0.85, 0.1}
 local green = {0.4, 0.95, 0.3}
-local white = { r = 1, g = 1, b = 1}
+local white = {1, 1, 1}
 local smoothGradient = {0.9,  0.2, 0.3, 
                           1, 0.85, 0.1, 
                         0.4, 0.95, 0.3}
--- fix oUF colors
-for i = 1,3 do
-	oUF.colors.reaction[i] = red
-end
-oUF.colors.reaction[4] = yellow
-for i = 5,8 do
-	oUF.colors.reaction[i] = green
-end
 
 -- This is the core of RightClick menus on diffrent frames
 local function menu(self)
@@ -134,6 +126,81 @@ oUF.colors.power.HAPPINESS = { 0, 1, 1}
 oUF.colors.power.RUNES = {0.5, 0.5, 0.5 }
 oUF.colors.power.RUNIC_POWER = {0.6, 0.45, 0.35}
 
+
+local updateHealthBarReaction = function(self, event, unit)
+	if(self.unit ~= unit) then return end
+	local health = self.Health
+
+	if(health.PreUpdate) then health:PreUpdate(unit) end
+
+	local min, max = UnitHealth(unit), UnitHealthMax(unit)
+	local disconnected = not UnitIsConnected(unit)
+	health:SetMinMaxValues(0, max)
+
+	if(disconnected) then
+		health:SetValue(max)
+	else
+		health:SetValue(min)
+	end
+
+	health.disconnected = disconnected
+	health.unit = unit
+
+	local r, g, b, t
+	if(health.colorTapping and UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit)) then
+		t = self.colors.tapped
+	elseif(health.colorDisconnected and disconnected) then
+		t = self.colors.disconnected
+	elseif(health.colorHappiness and unit == "pet" and GetPetHappiness()) then
+		t = self.colors.happiness[GetPetHappiness()]
+	elseif(health.colorClass and UnitIsPlayer(unit)) or
+		(health.colorClassNPC and not UnitIsPlayer(unit)) or
+		(health.colorClassPet and UnitPlayerControlled(unit) and not UnitIsPlayer(unit)) then
+		local _, class = UnitClass(unit)
+		t = self.colors.class[class]
+	elseif(health.colorReaction and UnitReaction(unit, 'player') and not UnitIsFriend(unit, 'player')) then
+		if(UnitPlayerControlled(unit)) then
+			if(UnitCanAttack('player', unit)) then
+				r, g, b = self.colors.reaction[1]
+			else
+				r, g, b = 0.68, 0.33, 0.38
+			end
+		else
+			local reaction = UnitReaction(unit, "player")
+			if reaction < 4 then
+				t = red
+			elseif reaction == 4 then
+				t = yellow
+			else
+				t = green
+			end
+		end
+	elseif(health.colorSmooth) then
+		r, g, b = self.ColorGradient(min / max, unpack(health.smoothGradient or self.colors.smooth))
+	elseif(health.colorHealth) then
+		t = self.colors.health
+	end
+
+	if(t) then
+		r, g, b = t[1], t[2], t[3]
+	end
+
+	if(b) then
+		health:SetStatusBarColor(r, g, b)
+
+		local bg = health.bg
+		if(bg) then
+			local mu = bg.multiplier or 1
+			bg:SetVertexColor(r * mu, g * mu, b * mu)
+		end
+	end
+
+	if(health.PostUpdate) then
+		return health:PostUpdate(unit, min, max)
+	end
+end
+
+
 local function updateLevel(self, event, unit)
 	if self.unit ~= unit then return end
 	
@@ -161,12 +228,13 @@ local function updateName(self, event, unit)
 	if self.Class then
 		local color = white
 		if UnitIsPlayer(unit) then
-			self.Class:SetText(UnitClass(unit))
-			color = RAID_CLASS_COLORS[select(2, UnitClass(unit))] or white
+			local class, eClass = UnitClass(unit)
+			self.Class:SetText(class)
+			color = oUF.colors.class[eClass] or white
 		else
 			self.Class:SetText(UnitCreatureFamily(unit) or UnitCreatureType(unit))
 		end
-		self.Class:SetVertexColor(color.r, color.g, color.b)
+		self.Class:SetVertexColor(unpack(color))
 	end
 
 	if self.Race then
@@ -336,9 +404,10 @@ local function style(settings, self, unit)
 	local micro = settings["nev-micro"]
 	local tiny = settings["nev-tiny"]
 	local mt = settings["nev-mt"]
+	local noattr
 
 	if self:GetAttribute("oUF_NevPet") then
-		micro, tiny, mt = true, nil, nil
+		micro, tiny, mt, noattr = true, nil, nil, true
 	end
 
 	-- Background
@@ -377,6 +446,7 @@ local function style(settings, self, unit)
 
 	if unit and strfind(unit, "target", 1, true) then
 		hp.colorReaction = true
+		hp.Update = updateHealthBarReaction
 	end
 
 	-- Healthbar text
@@ -552,13 +622,6 @@ local function style(settings, self, unit)
 				end
 				tinsert(self.CPoints, c)
 			end
-			-- a metatable hack to always query UnitHasVehicleUI on CP updates
-			setmetatable(self.CPoints, {__index = function(t, k)
-				if k == "unit" then
-					return UnitHasVehicleUI("player") and "vehicle" or "player"
-				end
-				return nil
-			end})
 		end
 
 		if unit == "target" or unit == "pet" or unit == "player" or not unit then
@@ -594,9 +657,11 @@ local function style(settings, self, unit)
 
 	--self.disallowVehicleSwap = true
 
-	for k,v in pairs(settings) do
-		if strfind(k, "initial-", 1, true) then
-			self:SetAttribute(k, v)
+	if not noattr then
+		for k,v in pairs(settings) do
+			if strfind(k, "initial-", 1, true) then
+				self:SetAttribute(k, v)
+			end
 		end
 	end
 
@@ -663,7 +728,7 @@ focus:SetScale(1.2)
 focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -390)
 
 oUF:SetActiveStyle("Nev")
-local party = oUF:SpawnHeader("oUF_Party", nil, "party",
+local party = oUF:SpawnHeader("oUF_Party", nil, "custom [group:raid]hide;[group:party]show;hide",
 	"template", "oUF_Nev_PartyTemplate",
 	"showParty", true,
 	"yOffset", -10
@@ -707,13 +772,8 @@ if oRA3 then
 	tankhandler:UpdateTanks()
 	oRA3.RegisterCallback(tankhandler, "OnTanksUpdated")
 else
-	MTs:SetManyAttributes(
-		"groupBy", "ROLE",
-		"groupFilter", "MAINTANK",
-		"groupingOrder", "1,2,3,4,5,6,7,8"
-	)
+	MTs:SetAttribute("groupBy", "ROLE")
+	MTs:SetAttribute("groupFilter", "MAINTANK")
+	MTs:SetAttribute("groupingOrder", "1,2,3,4,5,6,7,8")
 end
-
 MTs:Show()
-
-RegisterStateDriver(party, "visibility", "[group:raid]hide;show")

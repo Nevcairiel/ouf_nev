@@ -13,14 +13,20 @@ local format, strfind, gsub, strsub, strupper = string.format, string.find, stri
 local floor, ceil, max, min = math.floor, math.ceil, math.max, math.min
 local unpack, type, select, tinsert, tconcat =  unpack, type, select, table.insert, table.concat
 
+------------------------------------------------------------
+--- formatting functions
+
+-- backdrop for the frames
 local backdrop = {
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground", tile = true, tileSize = 16,
 		edgeFile = "Interface\\AddOns\\oUF_Nev\\media\\border", edgeSize = 8, 
 		insets = {left = 4, right = 4, top = 4, bottom = 4},
 	}
+-- texture and font
 local statusbartexture = "Interface\\AddOns\\oUF_Nev\\media\\bantobar"
 local font = "Interface\\AddOns\\oUF_Nev\\media\\myriad.ttf"
 
+-- colors
 local red = {0.9, 0.2, 0.3}
 local yellow = {1, 0.85, 0.1}
 local green = {0.4, 0.95, 0.3}
@@ -29,18 +35,17 @@ local smoothGradient = {0.9,  0.2, 0.3,
                           1, 0.85, 0.1, 
                         0.4, 0.95, 0.3}
 
--- This is the core of RightClick menus on diffrent frames
-local function menu(self)
-	local unit = strsub(self.unit, 1, -2)
-	local cunit = gsub(self.unit, "(.)", strupper, 1)
+-- format strings for unit classifications
+local classificationFormats = {
+	worldboss = "?? |cffff0000Boss|r",
+	rareelite = "%d|cffffcc00+|r |cffffaaffRare|r",
+	elite = "%d|cffffcc00+|r",
+	rare = "%d |cffff66ffRare|r",
+	normal = "%d",
+	trivial = "%d",
+}
 
-	if(unit == "party" or unit == "partypet") then
-		ToggleDropDownMenu(1, nil, _G["PartyMemberFrame"..self.id.."DropDown"], "cursor", 0, 0)
-	elseif(_G[cunit.."FrameDropDown"]) then
-		ToggleDropDownMenu(1, nil, _G[cunit.."FrameDropDown"], "cursor", 0, 0)
-	end
-end
-
+-- format a large number using k and m abbreviations
 local function formatLargeValue(value)
 	if value < 9999 then
 		return value
@@ -51,46 +56,44 @@ local function formatLargeValue(value)
 	end
 end
 
-local classificationFormats = {
-	worldboss = "?? |cffff0000Boss|r",
-	rareelite = "%d|cffffcc00+|r |cffffaaffRare|r",
-	elite = "%d|cffffcc00+|r",
-	rare = "%d |cffff66ffRare|r",
-	normal = "%d",
-	trivial = "%d",
-}
-
+-- wrapper for difficulty coloring
 local function getDifficultyColor(level)
 	local c = GetDifficultyColor((level > 0) and level or 99)
 	return c.r, c.g, c.b
 end
 
+-- format strings for bar formats
 local barFormatMinMax = "%s/%s"
 local barFormatPercMinMax = "%d%% %s/%s"
 local barFormatPerc = "%d%%"
 
+-- default bar format - min/max value
 local function fmt_standard(txt, min, max)
 	min, max = formatLargeValue(min), formatLargeValue(max)
 	txt:SetFormattedText(barFormatMinMax, min, max)
 end
 
+-- bar format with min/max and perc
 local function fmt_percminmax(txt, min, max)
 	local perc = floor(min/max*100)
 	min, max = formatLargeValue(min), formatLargeValue(max)
 	txt:SetFormattedText(barFormatPercMinMax, perc, min, max)
 end
 
+-- bar format with just perc
 local function fmt_perc(txt, min, max)
 	local perc = floor(min/max*100)
 	txt:SetFormattedText(barFormatPerc, perc)
 end
 
+-- metatable for fmt functions
 local fmtmeta = { __index = function(self, key)
 	if type(key) == "nil" then return nil end
 	rawset(self, key, fmt_standard)
 	return self[key]
 end}
 
+-- format metatable to map all special units to format tags
 local formats = setmetatable({}, { 
 	__index = function(self, key)
 		if type(key) == "nil" then return nil end
@@ -110,6 +113,7 @@ local formats = setmetatable({}, {
 	end,
 })
 
+-- specify formatting tags per unit
 formats.target.health = fmt_percminmax
 formats.targettarget.health = fmt_perc
 formats.targettargettarget.health = fmt_perc
@@ -126,7 +130,22 @@ oUF.colors.power.HAPPINESS = { 0, 1, 1}
 oUF.colors.power.RUNES = {0.5, 0.5, 0.5 }
 oUF.colors.power.RUNIC_POWER = {0.6, 0.45, 0.35}
 
+------------------------------------------------------------
+--- frame functions and element overrides
 
+-- This is the core of RightClick menus on diffrent frames
+local function menu(self)
+	local unit = strsub(self.unit, 1, -2)
+	local cunit = gsub(self.unit, "(.)", strupper, 1)
+
+	if(unit == "party" or unit == "partypet") then
+		ToggleDropDownMenu(1, nil, _G["PartyMemberFrame"..self.id.."DropDown"], "cursor", 0, 0)
+	elseif(_G[cunit.."FrameDropDown"]) then
+		ToggleDropDownMenu(1, nil, _G[cunit.."FrameDropDown"], "cursor", 0, 0)
+	end
+end
+
+-- replacement for .Health.Update with better reaction coloring
 local updateHealthBarReaction = function(self, event, unit)
 	if(self.unit ~= unit) then return end
 	local health = self.Health
@@ -200,7 +219,7 @@ local updateHealthBarReaction = function(self, event, unit)
 	end
 end
 
-
+-- Update the unit level and classificiation
 local function updateLevel(self, event, unit)
 	if self.unit ~= unit then return end
 	
@@ -216,6 +235,8 @@ local function updateLevel(self, event, unit)
 	end
 end
 
+-- update the unit name, class and race
+-- also delegates calls to updateLevel
 local function updateName(self, event, unit)
 	if self.unit ~= unit then return end
 
@@ -242,6 +263,7 @@ local function updateName(self, event, unit)
 	end
 end
 
+-- update highlight
 local function updateHighlight(self, entered)
 	if (UnitExists("target") and UnitIsUnit("target", self.unit) and (not strfind(self.unit, "target", 1, true))) or entered then
 		self.MouseOverHighlight:Show()
@@ -250,20 +272,24 @@ local function updateHighlight(self, entered)
 	end
 end
 
+-- update over highlight
 local function updateMouseOverHighlight(self, event, unit)
 	updateHighlight(self)
 end
 
+-- enterd the frame
 local function OnEnter(self)
 	updateHighlight(self, true)
 	UnitFrame_OnEnter(self)
 end
 
+-- left the frame
 local function OnLeave(self)
 	updateHighlight(self)
 	UnitFrame_OnLeave()
 end
 
+-- update Health - .Health.PostUpdate hook
 local function updateHealth(bar, unit, min, max)
 	local self = bar:GetParent()
 	if UnitIsDead(unit) then
@@ -282,6 +308,7 @@ local function updateHealth(bar, unit, min, max)
 	bar:GetParent():UNIT_NAME_UPDATE(nil, unit)
 end
 
+-- Update Power - .Power.PostUpdate hook
 local function updatePower(bar, unit, min, max)
 	if max == 0 or UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then
 		bar:SetValue(0)
@@ -293,16 +320,8 @@ local function updatePower(bar, unit, min, max)
 	end
 end
 
-local function getFontString(parent, justify, size)
-	local fs = parent:CreateFontString(nil, "OVERLAY")
-	fs:SetFont(font, size or 11)
-	fs:SetShadowColor(0,0,0)
-	fs:SetShadowOffset(0.8, -0.8)
-	fs:SetTextColor(1,1,1)
-	fs:SetJustifyH(justify or "LEFT")
-	return fs
-end
-
+-- .Auras.SetPosition hook
+-- custom aura positioning logic
 local function SetAuraPosition(icons, x)
 	if icons and x > 0 then
 		local col = 0
@@ -366,6 +385,8 @@ local function SetAuraPosition(icons, x)
 	end
 end
 
+-- .Auras.PostCreateIcon hook
+-- Adjust scale and fix count text
 local function postCreateAuraIcon(icons, button)
 	local cols = icons.cols or 10
 	local rows = icons.rows or 2
@@ -384,6 +405,7 @@ local function postCreateAuraIcon(icons, button)
 	Count:SetJustifyH("RIGHT")
 end
 
+-- adjust the position of the name text depending on a visible raid icon in micro layout
 local function fixNamePos(self, state)
 	local name = self.Name
 	if state then
@@ -393,6 +415,18 @@ local function fixNamePos(self, state)
 	end
 end
 
+-- utility function to create a new font string
+local function getFontString(parent, justify, size)
+	local fs = parent:CreateFontString(nil, "OVERLAY")
+	fs:SetFont(font, size or 11)
+	fs:SetShadowColor(0,0,0)
+	fs:SetShadowOffset(0.8, -0.8)
+	fs:SetTextColor(1,1,1)
+	fs:SetJustifyH(justify or "LEFT")
+	return fs
+end
+
+-- big ass style function
 local function style(settings, self, unit)
 	self.menu = menu
 	self.unit = unit

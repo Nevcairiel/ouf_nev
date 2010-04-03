@@ -658,7 +658,7 @@ local function style(settings, self, unit)
 			end
 		end
 
-		if unit == "target" or unit == "pet" or unit == "player" or unit == "party" then
+		if unit ~= "focus" then
 			local auras = CreateFrame("Frame", nil, self)
 			auras:SetHeight(16)
 			auras:SetPoint("TOPRIGHT", self, "BOTTOMRIGHT", -4, 2)

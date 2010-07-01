@@ -759,10 +759,10 @@ pet:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -90)
 
 local focus = oUF:Spawn("focus", "oUF_Focus")
 focus:SetScale(1.2)
-focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -390)
+focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -450)
 
 oUF:SetActiveStyle("Nev")
-local party = oUF:SpawnHeader("oUF_Party", nil, "custom [group:raid]hide;[group:party]show;hide",
+local party = oUF:SpawnHeader("oUF_Party", nil, "party",
 	"template", "oUF_Nev_PartyTemplate",
 	"showParty", true,
 	"yOffset", -10

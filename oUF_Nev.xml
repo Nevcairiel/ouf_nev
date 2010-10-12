@@ -1,5 +1,12 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 	<Button name="oUF_Nev_MTTemplate" inherits="SecureUnitButtonTemplate" hidden="true" virtual="true">
+		<Attributes>
+			<Attribute name="*type1" type="string" value="target"/>
+			<Attribute name="initial-unitWatch" type="boolean" value="true"/>
+			<Attribute name="initial-width" type="string" value="135"/>
+			<Attribute name="initial-height" type="string" value="28"/>
+			<Attribute name="initial-scale" type="string" value="1.0"/>
+		</Attributes>
 		<Frames>
 			<Button name="$parentTarget" inherits="SecureUnitButtonTemplate">
 				<Anchors>
@@ -12,11 +19,20 @@
 					<Attribute name="useparent-unit" type="boolean" value="true"/>
 					<Attribute name="*type1" type="string" value="target"/>
 					<Attribute name="initial-unitWatch" type="boolean" value="true"/>
+					<Attribute name="initial-width" type="string" value="135"/>
+					<Attribute name="initial-height" type="string" value="28"/>
+					<Attribute name="initial-scale" type="string" value="1.0"/>
 				</Attributes>
 			</Button>
 		</Frames>
 	</Button>
 	<Button name="oUF_Nev_PartyTemplate" inherits="SecureUnitButtonTemplate" hidden="true" virtual="true">
+		<Attributes>
+			<Attribute name="*type1" type="string" value="target"/>
+			<Attribute name="initial-width" type="string" value="170"/>
+			<Attribute name="initial-height" type="string" value="46"/>
+			<Attribute name="initial-scale" type="string" value="1.3"/>
+		</Attributes>
 		<Frames>
 			<Button name="$parentPet" inherits="SecureUnitButtonTemplate">
 				<Anchors>

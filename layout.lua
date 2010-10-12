@@ -427,21 +427,25 @@ local function getFontString(parent, justify, size)
 end
 
 -- big ass style function
-local function style(settings, self, unit)
+local function style(settings, self, unit, noHeader)
 	self.menu = menu
 	self.unit = unit
 	self:RegisterForClicks("anyup")
-	self:SetAttribute("*type2", "menu")
 	self:SetScript("OnEnter", OnEnter)
 	self:SetScript("OnLeave", OnLeave)
 
 	local micro = settings["nev-micro"]
 	local tiny = settings["nev-tiny"]
 	local mt = settings["nev-mt"]
-	local noattr
 
 	if self:GetAttribute("oUF_NevPet") then
-		micro, tiny, mt, noattr = true, nil, nil, true
+		micro, tiny, mt = true, nil, nil
+	end
+
+	if noHeader then
+		self:SetHeight(settings["initial-height"])
+		self:SetWidth(settings["initial-width"])
+		self:SetScale(settings["initial-scale"])
 	end
 
 	-- Background
@@ -691,14 +695,6 @@ local function style(settings, self, unit)
 
 	--self.disallowVehicleSwap = true
 
-	if not noattr then
-		for k,v in pairs(settings) do
-			if strfind(k, "initial-", 1, true) then
-				self:SetAttribute(k, v)
-			end
-		end
-	end
-
 	return self
 end
 
@@ -775,7 +771,6 @@ local MTs = oUF:SpawnHeader("oUF_MTs", nil, "raid",
 	"template", "oUF_Nev_MTTemplate",
 	"showRaid", true,
 	"yOffset", 1,
-	"initial-unitWatch", true,
 	"sortDir", "ASC"
 )
 MTs:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -140)
@@ -806,8 +801,8 @@ if oRA3 then
 	tankhandler:UpdateTanks()
 	oRA3.RegisterCallback(tankhandler, "OnTanksUpdated")
 else
-	MTs:SetAttribute("groupBy", "ROLE")
 	MTs:SetAttribute("groupFilter", "MAINTANK")
 	MTs:SetAttribute("groupingOrder", "1,2,3,4,5,6,7,8")
+	MTs:SetAttribute("groupBy", "ROLE")
 end
 MTs:Show()

@@ -734,6 +734,23 @@ oUF:RegisterStyle("Nev_MicroMT", setmetatable({
 }, {__call = style}))
 
 
+local configFunc = [[
+	local width = self:GetAttribute("initial-width")
+	if width then
+		self:SetWidth(width)
+	end
+
+	local height = self:GetAttribute("initial-height")
+	if height then
+		self:SetHeight(height)
+	end
+
+	local scale = self:GetAttribute("initial-scale")
+	if scale then
+		self:SetScale(scale)
+	end
+]]
+
 oUF:SetActiveStyle("Nev")
 local player = oUF:Spawn("player", "oUF_Player")
 player:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 10, -26)
@@ -761,7 +778,8 @@ oUF:SetActiveStyle("Nev")
 local party = oUF:SpawnHeader("oUF_Party", nil, "party",
 	"template", "oUF_Nev_PartyTemplate",
 	"showParty", true,
-	"yOffset", -10
+	"yOffset", -10,
+	"oUF-initialConfigFunction", configFunc
 )
 party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -120)
 party:Show()
@@ -771,7 +789,8 @@ local MTs = oUF:SpawnHeader("oUF_MTs", nil, "raid",
 	"template", "oUF_Nev_MTTemplate",
 	"showRaid", true,
 	"yOffset", 1,
-	"sortDir", "ASC"
+	"sortDir", "ASC",
+	"oUF-initialConfigFunction", configFunc
 )
 MTs:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -140)
 
